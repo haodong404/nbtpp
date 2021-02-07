@@ -54,19 +54,20 @@ nbtpp::Double::Double(const double& payload) : payload(payload) {
 
 }
 
-nbtpp::Compound::Content::Content(char* ptr, unsigned int& size) : ptr(ptr), size(size) {}
+nbtpp::Compound::Content::Content(char* ptr, unsigned int& size) : ptr(ptr), size(size)  {}
 
 char* nbtpp::Compound::addItem(std::string& name, unsigned int& size, char* payload) {
 
-    int a = size;
+    size_t a = size;
     char* result = (char*) malloc(a);
 
-    for (int i = 0; i < size; i++) {
-        result[i] = payload[i];
+    if(result != nullptr) {
+        for (int i = 0; i < size; i++) {
+            result[i] = payload[i];
+        }
+        Content content(result, size);
+        contentMap.insert(std::make_pair(name, content));
     }
-
-    Content content(result,size);
-    contentMap.insert(std::make_pair(name, content));
 
     return result;
 }

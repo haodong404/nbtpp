@@ -11,6 +11,16 @@
 
 namespace nbtpp {
 
+    enum TagSize : char {
+        INT = 4,
+        BYTE = 1,
+        SHORT = 2,
+        LONG = 8,
+        DOUBLE = 8,
+        FLOAT = 4
+    };
+
+
     class BaseTag {
         short name_size;
         std::string name;
@@ -75,6 +85,7 @@ namespace nbtpp {
         const static char payload_size = 2;
 
         Short(const short&);
+
     private:
         short payload;
     };
@@ -85,6 +96,7 @@ namespace nbtpp {
         const static char payload_size = 4;
 
         Int(const int&);
+
     private:
         int payload;
     };
@@ -97,7 +109,7 @@ namespace nbtpp {
         Long(std::unique_ptr<char>);
 
     private:
-        std::unique_ptr<char> payload = std::make_unique<char>() ; // Because the size of type long is different on different platforms.
+        std::unique_ptr<char> payload = std::make_unique<char>(); // Because the size of type long is different on different platforms.
 
     };
 
@@ -118,6 +130,7 @@ namespace nbtpp {
         const static char payload_size = 8;
 
         Double(const double&);
+
     private:
         double payload;
     };
@@ -127,6 +140,7 @@ namespace nbtpp {
         const static char type_id = 0x07;
 
         ByteArray(const std::list<char>&);
+
     private:
         std::list<char> payload;
     };
@@ -134,7 +148,9 @@ namespace nbtpp {
     class String : public NonspecificShortTag {
     public:
         const static char type_id = 0x08;
+
         String(const std::string&);
+
     private:
         std::string payload;
     };
@@ -153,7 +169,7 @@ namespace nbtpp {
         /**
          * Using a Content class to store the pointer and size of payload.
          */
-        struct Content{
+        struct Content {
             // The first byte pointer of payload
             char* ptr;
             unsigned int size;
@@ -162,8 +178,8 @@ namespace nbtpp {
 
         };
 
-        std::map<std::string,Content> contentMap;
-
+        std::map<std::string, Content> contentMap;
+        std::map<std::string, Compound*> internalCompound;
 
         char* addItem(std::string& name, unsigned int& size, char* payload);
 
