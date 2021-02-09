@@ -61,21 +61,23 @@ void nbtpp::NBT::readTagCompound() {
     }
 }
 
-void nbtpp::NBT::readTagStandard(const short& lengthOfPrefix, const int& payloadSize, bool isNumber) {
+void nbtpp::NBT::readTagStandard(const short& lengthOfPrefix, const int& payloadLength, bool isNumber) {
     Compound* compound = compoundsStack.top();
 
     auto name = parseTagName();
 
-    int mPayloadSize = payloadSize;
+    int mPayloadLength = payloadLength;
+    unsigned int unitSize = 1;
 
     if (lengthOfPrefix == 4 ||
-        payloadSize == 99) { // Get the length if the tag is String, Using "payloadSize == 99" to distinguish.
-        mPayloadSize = *parsePayloadSizePrefix(lengthOfPrefix);
+        payloadLength == 99) { // Get the length if the tag is String, Using "payloadLength == 99" to distinguish.
+        mPayloadLength = *parsePayloadLengthPrefix(lengthOfPrefix);
+        unitSize = payloadLength;
     }
 
-    auto payload = parsePayload(mPayloadSize, isNumber);
+    auto payload = parsePayload(mPayloadLength, isNumber);
 
-    compound->addItem(*name, *(unsigned int*) &mPayloadSize, *payload);
+    compound->addItem(*name, *(unsigned int*) &mPayloadLength, unitSize, *payload);
 
     next();
 }
@@ -84,14 +86,14 @@ void nbtpp::NBT::readTagList(bool isRoot) {
     auto tagName = parseTagName();
     char tagId = in.get();
     auto tagSize = getTagSizeById(tagId);
-    int payloadSize = *parsePayloadSizePrefix(4);
+    int payloadSize = *parsePayloadLengthPrefix(4);
     int totalSize = payloadSize * (*tagSize);
     auto payload = parsePayload(totalSize, false);
     if (isRoot) {
 
     } else {
         Compound* compound = compoundsStack.top();
-        compound->addItem(*tagName, *(unsigned int*) &payloadSize, *payload);
+        compound->addItem(*tagName, *(unsigned int*) &payloadSize, reinterpret_cast<unsigned int&>(*tagSize), *payload );
     }
 
     next();
@@ -119,7 +121,7 @@ std::unique_ptr<std::string> nbtpp::NBT::parseTagName() {
     return std::move(name);
 }
 
-std::unique_ptr<int> nbtpp::NBT::parsePayloadSizePrefix(const int& lengthOfPrefix) {
+std::unique_ptr<int> nbtpp::NBT::parsePayloadLengthPrefix(const int& lengthOfPrefix) {
     auto result = std::make_unique<int>();
     if (getEdition() == nbtpp::Edition::BEDROCK) {
         for (int i = 0; i < lengthOfPrefix; i++) {
@@ -133,14 +135,14 @@ std::unique_ptr<int> nbtpp::NBT::parsePayloadSizePrefix(const int& lengthOfPrefi
     return std::move(result);
 }
 
-std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadSize, bool isNumber) {
-    auto result = std::make_unique<char*>(new char[payloadSize]);
+std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadLength, bool isNumber) {
+    auto result = std::make_unique<char*>(new char[payloadLength]);
     if (isNumber && getEdition() == nbtpp::Edition::JAVA) {
-        for (short i = payloadSize - 1; i >= 0; i--) {
+        for (short i = payloadLength - 1; i >= 0; i--) {
             (*result)[i] = in.get();
         }
     } else {
-        for (short i = 0; i < payloadSize; i++) {
+        for (short i = 0; i < payloadLength; i++) {
             (*result)[i] = in.get();
         }
     }
@@ -178,9 +180,9 @@ void nbtpp::NBT::next() {
     } else if (nextId == Compound::type_id) {
         readTagCompound();
     } else if (nextId == IntArray::type_id) {
-        readTagStandard(4, 0, false);
+        readTagStandard(4, 4, false);
     } else if (nextId == LongArray::type_id) {
-        readTagStandard(4, 0, false);
+        readTagStandard(4, 4, false);
     }
 
 }

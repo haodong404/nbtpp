@@ -14,19 +14,25 @@ namespace nbtpp {
 
     private:
 
-        nbtpp::NBT* nbt;
+        std::stack<BaseCompound*> compoundStack;
+
+        nbtpp::NBT* nbt = nullptr;
 
     public:
 
-        template<class Tag>
+        template<typename Tag>
         Tag findItemByName(const char* name) {
-            Tag tag;
-            tag = *nbt->getRootCompound()->internalCompound.find("Data")->second->contentMap.find(name)->second.ptr;
-//std::cout << nbt->getRootCompound()->internalCompound.size();
-            return tag ;
+            if (Tag::type_id == nbtpp::String::type_id) {
+                Tag tag1(getNbt()->getRootCompound()->contentMap.find(name)->second);
+                std::cout << "String" << std::endl;
+                return tag1;
+            } else {
+                Tag tag1(getNbt()->getRootCompound()->contentMap.find(name)->second);
+                std::cout << "Not String" << std::endl;
+                return tag1;
+            }
         }
 
-        virtual void bindName();
 
         BaseCompound(nbtpp::NBT* nbt);
 

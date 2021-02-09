@@ -37,14 +37,14 @@ namespace nbtpp {
          * @param lengthOfPrefix Some are 2 bytes, some are 4 bytes.
          * @return A smart pointer of payload size.
          */
-        std::unique_ptr<int> parsePayloadSizePrefix(const int& lengthOfPrefix);
+        std::unique_ptr<int> parsePayloadLengthPrefix(const int& lengthOfPrefix);
 
         /**
          * Parsing the payload.
-         * @param payloadSize payload size, it's always from the function 'parsePayloadSizePrefix(const int& lengthOf Prefix)'
+         * @param payloadLength payload size, it's always from the function 'parsePayloadLengthPrefix(const int& lengthOf Prefix)'
          * @return A smart pointer of payload bytes array.
          */
-        std::unique_ptr<char*> parsePayload(int& payloadSize, bool isNumber);
+        std::unique_ptr<char*> parsePayload(int& payloadLength, bool isNumber);
 
         void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it);
 
@@ -56,9 +56,9 @@ namespace nbtpp {
         /**
          * Reading the regular tags;
          * @param lengthOfPrefix The length of payload prefix, some are 2 bytes, and some are 4 bytes.
-         * @param payloadSize The length of payload.
+         * @param payloadLength The length of payload.
          */
-        void readTagStandard(const short& lengthOfPrefix, const int& payloadSize, bool isNumber);
+        void readTagStandard(const short& lengthOfPrefix, const int& payloadLength, bool isNumber);
 
         /**
          * Reading the list tag.
