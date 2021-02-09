@@ -61,109 +61,92 @@ namespace nbtpp {
     /**
      * The Tag_End class
      */
-    class End : public BaseTag {
-    public:
+    struct End : public BaseTag {
         const static char type_id = 0x00;
         const static char payload_size = 0;
     };
 
-    class Byte : public BaseTag {
-    public:
+    struct Byte : public BaseTag {
+
         const static char type_id = 0x01;
         const static char payload_size = 1;
 
         Byte(const char& payload);
 
-    private:
         char payload;
     };
 
 
-    class Short : public BaseTag {
-    public:
+    struct Short : public BaseTag {
         const static char type_id = 0x02;
         const static char payload_size = 2;
 
         Short(const short&);
 
-    private:
         short payload;
     };
 
-    class Int : public BaseTag {
-    public:
+    struct Int : public BaseTag {
         const static char type_id = 0x03;
         const static char payload_size = 4;
 
+        Int();
         Int(const int&);
 
-    private:
         int payload;
     };
 
-    class Long : public BaseTag {
-    public:
+    struct Long : public BaseTag {
         const static char type_id = 0x04;
         const static char payload_size = 8;
 
         Long(std::unique_ptr<char>);
 
-    private:
         std::unique_ptr<char> payload = std::make_unique<char>(); // Because the size of type long is different on different platforms.
 
     };
 
-    class Float : public BaseTag {
-    public:
+    struct Float : public BaseTag {
         const static char type_id = 0x05;
         const static char payload_size = 4;
 
         Float(const float&);
 
-    private:
         float payload;
     };
 
-    class Double : public BaseTag {
-    public:
+    struct Double : public BaseTag {
         const static char type_id = 0x06;
         const static char payload_size = 8;
 
         Double(const double&);
 
-    private:
         double payload;
     };
 
-    class ByteArray : public NonspecificIntTag {
-    public:
+    struct ByteArray : public NonspecificIntTag {
         const static char type_id = 0x07;
 
         ByteArray(const std::list<char>&);
 
-    private:
         std::list<char> payload;
     };
 
-    class String : public NonspecificShortTag {
-    public:
+    struct String : public NonspecificShortTag {
         const static char type_id = 0x08;
 
         String(const std::string&);
 
-    private:
         std::string payload;
     };
 
-    class List : public NonspecificShortTag {
-    public:
+    struct List : public NonspecificShortTag {
         const static char type_id = 0x09;
-    private:
 
     };
 
-    class Compound : public NonspecificShortTag {
-    public:
+    struct Compound : public NonspecificShortTag {
+
         const static char type_id = 0x0A;
 
         /**
@@ -179,20 +162,25 @@ namespace nbtpp {
         };
 
         std::map<std::string, Content> contentMap;
+
         std::map<std::string, Compound*> internalCompound;
 
+        /**
+         * Add item to content map, it will allocate memory.
+         * @param name The name of one item.
+         * @param size payload size
+         * @param payload payload bytes array.
+         * @return
+         */
         char* addItem(std::string& name, unsigned int& size, char* payload);
 
     };
 
-    class IntArray : public NonspecificIntTag {
-    public:
+    struct IntArray : public NonspecificIntTag {
         const static char type_id = 0x0B;
     };
 
-    class LongArray : public NonspecificIntTag {
-    public:
+    struct LongArray : public NonspecificIntTag {
         const static char type_id = 0x0C;
     };
-
 }

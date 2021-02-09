@@ -4,14 +4,17 @@
 #include "nbtpp.h"
 #include <iostream>
 
-nbtpp::NBT::NBT(const char* filePath, nbtpp::Edition edi) : in(std::ifstream(filePath)) {
+nbtpp::NBT::NBT(const char* filePath, const nbtpp::Edition& edi) : in(std::ifstream(filePath)), edition(edi) {
     if (in.is_open()) {
     }
     while (!in.eof()) {
         if (in.get() == nbtpp::Compound::type_id) {
-            compoundsStack.push(&rootCompound);
+            rootCompound = new Compound();
+            compoundsStack.push(rootCompound);
             readTagCompound();
             break;
+        } else if (in.get() == nbtpp::List::type_id) {
+
         }
     }
 }
@@ -20,27 +23,23 @@ nbtpp::NBT::~NBT() {
     this->in.close();
 
     // Releasing the memory
-    for (auto it = getRootCompound().contentMap.begin(); it != getRootCompound().contentMap.end(); it++) {
+    for (auto it = getRootCompound()->contentMap.begin(); it != getRootCompound()->contentMap.end(); it++) {
         free(it->second.ptr);
     }
 
-    auto it = getRootCompound().internalCompound.begin();
-    deleteInternalCompounds(getRootCompound(), it);
+    deleteInternalCompounds(*getRootCompound(), getRootCompound()->internalCompound.begin());
 
 }
 
-void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it) {
+void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it) {
     for (auto i = compound.contentMap.begin(); i != compound.contentMap.end(); i++) {
         free(i->second.ptr);
-        std::cout << "DELETE ITEM !!" << std::endl;
-
     }
 
     if (it != compound.internalCompound.end()) {
-        auto i  = it->second->internalCompound.begin();
+        auto i = it->second->internalCompound.begin();
         deleteInternalCompounds(*it->second, i);
         delete it->second;
-        std::cout << "DELETE COMPOUND !!" << std::endl;
         it++;
     }
 }
@@ -62,7 +61,7 @@ void nbtpp::NBT::readTagCompound() {
     }
 }
 
-void nbtpp::NBT::readTagStandard(const short& lengthOfPrefix, const int& payloadSize) {
+void nbtpp::NBT::readTagStandard(const short& lengthOfPrefix, const int& payloadSize, bool isNumber) {
     Compound* compound = compoundsStack.top();
 
     auto name = parseTagName();
@@ -74,22 +73,26 @@ void nbtpp::NBT::readTagStandard(const short& lengthOfPrefix, const int& payload
         mPayloadSize = *parsePayloadSizePrefix(lengthOfPrefix);
     }
 
-    auto payload = parsePayload(mPayloadSize);
+    auto payload = parsePayload(mPayloadSize, isNumber);
 
     compound->addItem(*name, *(unsigned int*) &mPayloadSize, *payload);
 
     next();
 }
 
-void nbtpp::NBT::readTagList() {
+void nbtpp::NBT::readTagList(bool isRoot) {
     auto tagName = parseTagName();
     char tagId = in.get();
     auto tagSize = getTagSizeById(tagId);
     int payloadSize = *parsePayloadSizePrefix(4);
-    auto payload = parsePayload(payloadSize);
-    Compound* compound = compoundsStack.top();
+    int totalSize = payloadSize * (*tagSize);
+    auto payload = parsePayload(totalSize, false);
+    if (isRoot) {
 
-    compound->addItem(*tagName, *(unsigned int*) &payloadSize, *payload);
+    } else {
+        Compound* compound = compoundsStack.top();
+        compound->addItem(*tagName, *(unsigned int*) &payloadSize, *payload);
+    }
 
     next();
 }
@@ -97,9 +100,16 @@ void nbtpp::NBT::readTagList() {
 std::unique_ptr<std::string> nbtpp::NBT::parseTagName() {
 
     short nameSize;
-    for (char i = 1; i >= 0; i--) { // Data are stored as little endian in memory.
-        *((char*) &nameSize + i) = in.get();
+    if (getEdition() == nbtpp::Edition::BEDROCK) {
+        for (char i = 0; i < 2; i++) {
+            *((char*) &nameSize + i) = in.get();
+        }
+    } else {
+        for (char i = 1; i >= 0; i--) { // Numbers are stored as little endian in memory.
+            *((char*) &nameSize + i) = in.get();
+        }
     }
+
     auto name = std::make_unique<std::string>();
     if (nameSize != 0) {
         for (short i = 0; i < nameSize; i++) {
@@ -111,16 +121,28 @@ std::unique_ptr<std::string> nbtpp::NBT::parseTagName() {
 
 std::unique_ptr<int> nbtpp::NBT::parsePayloadSizePrefix(const int& lengthOfPrefix) {
     auto result = std::make_unique<int>();
-    for (int i = lengthOfPrefix - 1; i >= 0; i--) {
-        *((char*) result.get() + i) = in.get();
+    if (getEdition() == nbtpp::Edition::BEDROCK) {
+        for (int i = 0; i < lengthOfPrefix; i++) {
+            *((char*) result.get() + i) = in.get();
+        }
+    } else {
+        for (int i = lengthOfPrefix - 1; i >= 0; i--) {
+            *((char*) result.get() + i) = in.get();
+        }
     }
     return std::move(result);
 }
 
-std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadSize) {
+std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadSize, bool isNumber) {
     auto result = std::make_unique<char*>(new char[payloadSize]);
-    for (short i = 0; i < payloadSize; i++) {
-        (*result)[i] = in.get();
+    if (isNumber && getEdition() == nbtpp::Edition::JAVA) {
+        for (short i = payloadSize - 1; i >= 0; i--) {
+            (*result)[i] = in.get();
+        }
+    } else {
+        for (short i = 0; i < payloadSize; i++) {
+            (*result)[i] = in.get();
+        }
     }
     return std::move(result);
 }
@@ -136,35 +158,31 @@ void nbtpp::NBT::next() {
         compoundsStack.pop();
         next();
     } else if (nextId == Byte::type_id) {
-        readTagStandard(2, 1);
+        readTagStandard(2, 1, false);
     } else if (nextId == Short::type_id) {
-        readTagStandard(2, 2);
+        readTagStandard(2, 2, true);
     } else if (nextId == Int::type_id) {
-        readTagStandard(2, 4);
+        readTagStandard(2, 4, true);
     } else if (nextId == Long::type_id) {
-        readTagStandard(2, 8);
+        readTagStandard(2, 8, true);
     } else if (nextId == Float::type_id) {
-        readTagStandard(2, 4);
+        readTagStandard(2, 4, true);
     } else if (nextId == Double::type_id) {
-        readTagStandard(2, 8);
+        readTagStandard(2, 8, true);
     } else if (nextId == ByteArray::type_id) {
-        readTagStandard(4, 0);
+        readTagStandard(4, 0, false);
     } else if (nextId == String::type_id) {
-        readTagStandard(2, 99);
+        readTagStandard(2, 99, false);
     } else if (nextId == List::type_id) {
-        readTagList();
+        readTagList(false);
     } else if (nextId == Compound::type_id) {
         readTagCompound();
     } else if (nextId == IntArray::type_id) {
-        readTagStandard(4, 0);
+        readTagStandard(4, 0, false);
     } else if (nextId == LongArray::type_id) {
-        readTagStandard(4, 0);
+        readTagStandard(4, 0, false);
     }
 
-}
-
-nbtpp::Compound nbtpp::NBT::getRootCompound() const {
-    return this->rootCompound;
 }
 
 std::unique_ptr<int> nbtpp::NBT::getTagSizeById(char& id) {
@@ -185,7 +203,17 @@ std::unique_ptr<int> nbtpp::NBT::getTagSizeById(char& id) {
         *result = 8;
     } else if (id == nbtpp::End::type_id) {
         *result = 0;
+    } else {
+        return nullptr;
     }
 
     return std::move(result);
+}
+
+nbtpp::Compound* nbtpp::NBT::getRootCompound() const {
+    return rootCompound;
+}
+
+nbtpp::Edition nbtpp::NBT::getEdition() const {
+    return edition;
 }

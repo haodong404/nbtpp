@@ -1,7 +1,7 @@
 //
 // Created by Zachary on 2021/2/2.
 //
-#include "Tag.h"
+#include "Tags.h"
 #include "iostream"
 
 
@@ -25,35 +25,6 @@ void nbtpp::BaseTag::setNameSize(const short& nameSize) {
 const std::string& nbtpp::BaseTag::getName() const {
     return name;
 }
-
-void nbtpp::BaseTag::setName(const std::string& m_name) {
-    BaseTag::name = m_name;
-}
-
-nbtpp::Byte::Byte(const char& payload) : payload(payload) {
-
-}
-
-nbtpp::Short::Short(const short& payload) : payload(payload) {
-
-}
-
-nbtpp::Int::Int(const int& payload) : payload(payload) {
-
-}
-
-nbtpp::Long::Long(std::unique_ptr<char> payload) : payload(payload.get()) {
-
-}
-
-nbtpp::Float::Float(const float& payload) : payload(payload) {
-
-}
-
-nbtpp::Double::Double(const double& payload) : payload(payload) {
-
-}
-
 nbtpp::Compound::Content::Content(char* ptr, unsigned int& size) : ptr(ptr), size(size)  {}
 
 char* nbtpp::Compound::addItem(std::string& name, unsigned int& size, char* payload) {
@@ -70,4 +41,37 @@ char* nbtpp::Compound::addItem(std::string& name, unsigned int& size, char* payl
     }
 
     return result;
+}
+void nbtpp::BaseTag::setName(const std::string& m_name) {
+    BaseTag::name = m_name;
+}
+
+nbtpp::Byte::Byte(const char& payload) : payload(payload) {
+
+}
+
+
+
+nbtpp::Short::Short(const short& payload) : payload(payload) {
+
+}
+
+nbtpp::Int::Int(const int& payload) : payload(payload) {
+
+}
+
+nbtpp::Int::Int() {
+
+}
+
+nbtpp::Long::Long(std::unique_ptr<char> payload) : payload(payload.get()) {
+
+}
+
+nbtpp::Float::Float(const float& payload) : payload(payload) {
+
+}
+
+nbtpp::Double::Double(const double& payload) : payload(payload) {
+
 }

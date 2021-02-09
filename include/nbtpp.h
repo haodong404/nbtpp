@@ -3,9 +3,9 @@
 //
 #pragma once
 
-#include "Tag.h"
-#include "fstream"
 #include <stack>
+#include "fstream"
+#include "Tags.h"
 
 namespace nbtpp {
 
@@ -21,8 +21,9 @@ namespace nbtpp {
 
     private:
         std::ifstream in;
-        Compound rootCompound; // It contains the root compound
-        bool isRoot = true ;
+        Compound* rootCompound; // It contains the root compound
+        bool isRoot = true;
+        nbtpp::Edition edition;
         std::stack<Compound*> compoundsStack; // The top compound is what the current compound used.
 
         /**
@@ -43,9 +44,9 @@ namespace nbtpp {
          * @param payloadSize payload size, it's always from the function 'parsePayloadSizePrefix(const int& lengthOf Prefix)'
          * @return A smart pointer of payload bytes array.
          */
-        std::unique_ptr<char*> parsePayload(int& payloadSize);
+        std::unique_ptr<char*> parsePayload(int& payloadSize, bool isNumber);
 
-        void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it);
+        void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it);
 
         /**
          * Reading the compound tag.
@@ -57,17 +58,18 @@ namespace nbtpp {
          * @param lengthOfPrefix The length of payload prefix, some are 2 bytes, and some are 4 bytes.
          * @param payloadSize The length of payload.
          */
-        void readTagStandard(const short& lengthOfPrefix, const int& payloadSize);
+        void readTagStandard(const short& lengthOfPrefix, const int& payloadSize, bool isNumber);
 
         /**
          * Reading the list tag.
          */
-        void readTagList();
+        void readTagList(bool isRoot);
 
         /**
          * The judgment statement of recursion.
          */
         void next();
+
     public:
 
         /**
@@ -75,7 +77,7 @@ namespace nbtpp {
          * @param filePath File path.
          * @param edi edition.
          */
-        NBT(const char* filePath, Edition edi);
+        NBT(const char* filePath, const Edition& edi);
 
         virtual ~NBT();
 
@@ -86,6 +88,8 @@ namespace nbtpp {
          */
         std::unique_ptr<int> getTagSizeById(char& id);
 
-        Compound getRootCompound() const ;
+        Compound* getRootCompound() const;
+
+        Edition getEdition() const;
     };
 }
