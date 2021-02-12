@@ -16,9 +16,12 @@ nbtpp::BaseCompound::BaseCompound(nbtpp::NBT* nbt) : nbt(nbt) {
 nbtpp::BaseCompound::BaseCompound(const char* filePath, const nbtpp::Edition& edition) {
     if (nbt == nullptr) {
         nbt = new NBT(filePath, edition);
+        this->itemMap = nbt->getRootCompound()->itemMap;
+        this->internalCompound = nbt->getRootCompound()->internalCompound;
     }
 }
 
 nbtpp::BaseCompound::~BaseCompound() {
     delete nbt;
 }
+

@@ -2,8 +2,6 @@
 // Created by Zachary on 2021/2/2.
 //
 #include "Tags.h"
-#include "iostream"
-
 
 void nbtpp::BaseTag::toHex() {
     std::cout << "Hex" << std::endl;
@@ -21,10 +19,13 @@ const std::string& nbtpp::BaseTag::getName() const {
     return name;
 }
 
-nbtpp::Compound::Content::Content(char* ptr, unsigned int& length, unsigned int& unitSize) : ptr(ptr),
-                                                                                             unitSize(unitSize) {}
+nbtpp::Compound::Content::Content(const char& typeId, char* ptr, unsigned int& length)
+        : typeId(typeId), ptr(ptr), length(length) {}
 
-char* nbtpp::Compound::addItem(std::string& name, unsigned int& length, unsigned int& unitSize, char* payload) {
+nbtpp::Compound::Content::Content(const nbtpp::Compound::Content& ano)
+        : typeId(ano.typeId), ptr(ano.ptr), length(ano.length) {}
+
+char* nbtpp::Compound::addItem(std::string& name, const char& typeId, unsigned int& length, char* payload) {
 
     size_t a = length;
     char* result = (char*) malloc(a);
@@ -33,11 +34,17 @@ char* nbtpp::Compound::addItem(std::string& name, unsigned int& length, unsigned
         for (int i = 0; i < length; i++) {
             result[i] = payload[i];
         }
-        Content content(result, length, unitSize);
-        contentMap.insert(std::make_pair(name, content));
+        Content content(typeId, result, length);
+        itemMap.insert(std::make_pair(name, content));
     }
 
     return result;
+}
+
+nbtpp::Compound::Compound() {}
+
+nbtpp::Compound::Compound(nbtpp::Compound* ano) : itemMap(ano->itemMap), internalCompound(ano->internalCompound) {
+
 }
 
 void nbtpp::BaseTag::setName(const std::string& m_name) {
@@ -59,7 +66,6 @@ nbtpp::Byte::Byte(const nbtpp::Compound::Content& content) {
 int nbtpp::Byte::toInteger() {
     return payload;
 }
-
 
 nbtpp::Short::Short(const short& payload) : payload(payload) {
 
@@ -85,16 +91,12 @@ nbtpp::Long::Long() {
 
 }
 
-nbtpp::Long::Long(char* payload) {
-    *this->payload = payload;
-}
-
 nbtpp::Long::Long(const nbtpp::Compound::Content& content) {
-    *payload = content.ptr;
+    payload = *(long*)content.ptr;
 }
 
-nbtpp::Long::Long(const long& payload) {
-    *this->payload = (char*) payload;
+nbtpp::Long::Long(const long& payload) : payload(payload) {
+
 }
 
 nbtpp::Float::Float(const float& payload) : payload(payload) {
@@ -103,6 +105,10 @@ nbtpp::Float::Float(const float& payload) : payload(payload) {
 
 nbtpp::Float::Float(const nbtpp::Compound::Content& content) {
     payload = *(float*) content.ptr;
+}
+
+nbtpp::Float::Float() {
+
 }
 
 nbtpp::Double::Double(const double& payload) : payload(payload) {
@@ -145,9 +151,9 @@ nbtpp::IntArray::IntArray(int* payload) : payload(payload) {
 }
 
 nbtpp::IntArray::IntArray(const nbtpp::Compound::Content& content) {
-    int result[content.length / content.unitSize];
+    int result[content.length / 4];
     for (int i = 0; i < content.length; i += 4) {
-        result[i/4] = content.ptr[i/4];
+        result[i / 4] = content.ptr[i / 4];
     }
     this->payload = result;
 }
@@ -160,6 +166,10 @@ nbtpp::LongArray::LongArray(long*) {
 
 }
 
-nbtpp::LongArray::LongArray(const nbtpp::Compound::Content&) {
+nbtpp::LongArray::LongArray(const nbtpp::Compound::Content& content) {
+    this->payload = content.ptr;
+}
+
+nbtpp::LongArray::LongArray(char*) {
 
 }

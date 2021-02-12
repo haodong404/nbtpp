@@ -5,7 +5,7 @@
 
 #include <stack>
 #include "fstream"
-#include "Tags.h"
+#include "BaseList.h"
 
 namespace nbtpp {
 
@@ -18,14 +18,14 @@ namespace nbtpp {
     };
 
     class NBT {
-
     private:
         std::ifstream in;
         Compound* rootCompound; // It contains the root compound
         bool isRoot = true;
+        bool isInList = false;
         nbtpp::Edition edition;
-        std::stack<Compound*> compoundsStack; // The top compound is what the current compound used.
 
+        std::stack<Compound*> compoundsStack; // The top compound is what the current compound used.
         /**
          * Parsing the tag name.
          * @return A smart pointer of string.
@@ -37,7 +37,7 @@ namespace nbtpp {
          * @param lengthOfPrefix Some are 2 bytes, some are 4 bytes.
          * @return A smart pointer of payload size.
          */
-        std::unique_ptr<int> parsePayloadLengthPrefix(const int& lengthOfPrefix);
+        std::unique_ptr<int> parsePayloadLengthPrefix(const char& typeId);
 
         /**
          * Parsing the payload.
@@ -51,14 +51,14 @@ namespace nbtpp {
         /**
          * Reading the compound tag.
          */
-        void readTagCompound();
+        Compound* readTagCompound(const bool& isInlist);
 
         /**
          * Reading the regular tags;
          * @param lengthOfPrefix The length of payload prefix, some are 2 bytes, and some are 4 bytes.
          * @param payloadLength The length of payload.
          */
-        void readTagStandard(const short& lengthOfPrefix, const int& payloadLength, bool isNumber);
+        char* readTagStandard(char& typeId, const bool& isInlist);
 
         /**
          * Reading the list tag.
@@ -86,10 +86,13 @@ namespace nbtpp {
          * @param id Tag's ID.
          * @return A smart pointer of size.
          */
-        std::unique_ptr<int> getTagSizeById(char& id);
+        std::unique_ptr<int> getTagSizeById(const char& id);
 
         Compound* getRootCompound() const;
 
         Edition getEdition() const;
+
+        bool isNumber(char& typeId);
+
     };
 }

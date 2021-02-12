@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <list>
+#include <vector>
 #include <memory>
 #include <map>
 
@@ -54,27 +56,48 @@ namespace nbtpp {
          * Using a Content class to store the pointer and size of payload.
          */
         struct Content {
-            // The first byte pointer of payload
-            char* ptr;
+            char typeId;
+            char* ptr; // The first byte pointer of payload
             unsigned int length; // The length of total data;
-            unsigned int unitSize; // The number of unis, for example: [2, 4, 5], if it's a int array, the unitSize is 3, length is 12;
 
-            Content(char* ptr, unsigned int& length, unsigned int& unitSize);
+            Content(const char& typeId, char* ptr, unsigned int& length);
 
+            Content(const Compound::Content& ano);
         };
 
-        std::map<std::string, Content> contentMap;
+        std::map<std::string, Content> itemMap;
 
         std::map<std::string, Compound*> internalCompound;
 
+        Compound();
+
+        Compound(Compound* ano);
+
         /**
          * Add item to content map, it will allocate memory.
+         * @param typeId the type of one item.
          * @param name The name of one item.
          * @param length payload length
          * @param payload payload bytes array.
-         * @return
+         * @return the target data's pointer.
          */
-        char* addItem(std::string& name, unsigned int& length, unsigned int& unitSize, char* payload);
+        char* addItem(std::string& name, const char& typeId, unsigned int& length, char* payload);
+
+
+        template<typename Tag>
+        Tag findItemByName(const char* name) {
+            return Tag(itemMap.find(name)->second);
+        }
+
+        template<typename Tag>
+        Tag findCompoundByName(const char* name) {
+            return Tag(internalCompound.find(name)->second);
+        }
+
+        template<typename Tag>
+        Tag findListByName(const char* name) {
+            return findItemByName<Tag>(name);
+        }
 
     };
 
@@ -98,9 +121,13 @@ namespace nbtpp {
 
         Byte(const Compound::Content&);
 
+        char payload;
+
         int toInteger();
 
-        char payload;
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Byte& byte) {
+            return out << byte.payload;
+        }
     };
 
     struct Short : public BaseTag {
@@ -112,6 +139,10 @@ namespace nbtpp {
         Short(const Compound::Content&);
 
         short payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Short& mShort) {
+            return out << mShort.payload;
+        }
     };
 
     struct Int : public BaseTag {
@@ -125,6 +156,11 @@ namespace nbtpp {
         Int(const Compound::Content&);
 
         int payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Int& mInt) {
+            return out << mInt.payload;
+        }
+
     };
 
     struct Long : public BaseTag {
@@ -135,12 +171,13 @@ namespace nbtpp {
 
         Long(const long&);
 
-        Long(char*);
-
         Long(const Compound::Content&);
 
-        std::unique_ptr<char*> payload = std::make_unique<char*>(
-                new char[8]); // Because the size of type long is different on different platforms.
+        long payload;// Because the size of type long is different on different platforms.
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Long& mLong) {
+            return out << mLong.payload;
+        }
 
     };
 
@@ -155,6 +192,11 @@ namespace nbtpp {
         Float(const Compound::Content&);
 
         float payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Float& mFloat) {
+            return out << mFloat.payload;
+        }
+
     };
 
     struct Double : public BaseTag {
@@ -168,6 +210,11 @@ namespace nbtpp {
         Double(const Compound::Content&);
 
         double payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::Double& mDouble) {
+            return out << mDouble.payload;
+        }
+
     };
 
     struct ByteArray : public NonspecificIntTag {
@@ -181,9 +228,21 @@ namespace nbtpp {
 
         char* payload;
 
-        size_t size() {
+        static size_t size() {
             return sizeof(payload);
         }
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::ByteArray& mByteArray) {
+            out << "[";
+            for (int i = 0; i < size(); i++) {
+                out << mByteArray.payload[i];
+                if (i != sizeof(payload) - 1) {
+                    out << ", ";
+                }
+            }
+            return out << "]";
+        }
+
     };
 
     struct String : public NonspecificShortTag {
@@ -198,11 +257,16 @@ namespace nbtpp {
         String(const Compound::Content&);
 
         std::string payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::String& mString) {
+            return out << mString.payload;
+        }
+
     };
+
 
     struct List : public NonspecificShortTag {
         const static char type_id = 0x09;
-
     };
 
     struct IntArray : public NonspecificIntTag {
@@ -215,6 +279,21 @@ namespace nbtpp {
         IntArray(const Compound::Content&);
 
         int* payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::IntArray& mIntArray) {
+            out << "[";
+            for (int i = 0; i < size(); i++) {
+                out << mIntArray.payload[i];
+                if (i != size() - 1) {
+                    out << ", ";
+                }
+            }
+            return out << "]" << size();
+        }
+
+        static size_t size() {
+            return sizeof(payload) / 2;
+        }
     };
 
     struct LongArray : public NonspecificIntTag {
@@ -224,10 +303,26 @@ namespace nbtpp {
 
         LongArray(long*);
 
-        LongArray(char**);
+        LongArray(char*);
 
         LongArray(const Compound::Content&);
 
-        char** payload;
+        char* payload;
+
+        friend std::ostream& operator<<(std::ostream& out, nbtpp::LongArray& mLongArray) {
+            out << "[";
+            for (int i = 0; i < size(); i++) {
+                out << mLongArray.payload[i];
+                if (i != sizeof(payload) - 1) {
+                    out << ", ";
+                }
+            }
+            return out << "]";
+        }
+
+        static size_t size() {
+            return sizeof(payload) / 8;
+        }
     };
+
 }

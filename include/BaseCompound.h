@@ -20,19 +20,7 @@ namespace nbtpp {
 
     public:
 
-        template<typename Tag>
-        Tag findItemByName(const char* name) {
-            if (Tag::type_id == nbtpp::String::type_id) {
-                Tag tag1(getNbt()->getRootCompound()->contentMap.find(name)->second);
-                std::cout << "String" << std::endl;
-                return tag1;
-            } else {
-                Tag tag1(getNbt()->getRootCompound()->contentMap.find(name)->second);
-                std::cout << "Not String" << std::endl;
-                return tag1;
-            }
-        }
-
+        BaseCompound(BaseCompound* ano);
 
         BaseCompound(nbtpp::NBT* nbt);
 
