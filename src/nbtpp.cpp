@@ -105,7 +105,6 @@ void nbtpp::NBT::readTagList(bool isRoot) {
         listPtr = (char*) items;
     } else {
         auto* items = new BaseList<Compound::Content>(payloadLength);
-        int *a = new int(415);
 
         for (int i = 0; i < payloadLength; i++) {
             char* payload = readTagStandard(tagId, true);
@@ -202,8 +201,9 @@ void nbtpp::NBT::next() {
     char nextId = in.get();
 
     if (in.eof()) {
-        return;
+        return ;
     }
+
     if (nextId == End::type_id) {
         compoundsStack.pop();
         if (isInList) {

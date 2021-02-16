@@ -14,19 +14,17 @@
 namespace nbtpp {
 
     class BaseTag {
-        short name_size;
-        std::string name;
-
     public:
+        static size_t length;
         void toHex();
 
-        short getNameSize() const;
+        static size_t getLength();
 
-        void setNameSize(const short& nameSize);
-
-        const std::string& getName() const;
-
-        void setName(const std::string& m_name);
+        /**
+         * Set the length of data.
+         * @param length
+         */
+        void setLength(size_t length);
     };
 
     /**
@@ -50,6 +48,8 @@ namespace nbtpp {
 
     struct Compound : public NonspecificShortTag {
 
+        std::string name;
+
         const static char type_id = 0x0A;
 
         /**
@@ -62,6 +62,10 @@ namespace nbtpp {
 
             Content(const char& typeId, char* ptr, unsigned int& length);
 
+            /**
+             * A copy constructor.
+             * @param ano Another one.
+             */
             Content(const Compound::Content& ano);
         };
 
@@ -75,29 +79,51 @@ namespace nbtpp {
 
         /**
          * Add item to content map, it will allocate memory.
-         * @param typeId the type of one item.
          * @param name The name of one item.
-         * @param length payload length
-         * @param payload payload bytes array.
+         * @param length The length of the data.
+         * @param payload The payload.
          * @return the target data's pointer.
          */
         char* addItem(std::string& name, const char& typeId, unsigned int& length, char* payload);
 
 
+        /**
+         * Find item by name, It just fits with ordinary tags.
+         * E.g. Byte, Int, Short ...
+         * @tparam Tag The target Tag.
+         * @param name Target name.
+         * @return The result.
+         */
         template<typename Tag>
         Tag findItemByName(const char* name) {
             return Tag(itemMap.find(name)->second);
         }
 
+        /**
+         * Find the compound by name, it just fits with compound tag, DO NOT transfer others.
+         * @tparam Tag The target Tag. It extends Compound.
+         * @param name Target name.
+         * @return The result.
+         */
         template<typename Tag>
         Tag findCompoundByName(const char* name) {
             return Tag(internalCompound.find(name)->second);
         }
 
+        /**
+         * Find the list by name, it just fits with List Tag, DO NOT transfer others.
+         * @tparam Tag The target Tag. It extends BaseList.
+         * @param name Target name.
+         * @return The result.
+         */
         template<typename Tag>
         Tag findListByName(const char* name) {
             return findItemByName<Tag>(name);
         }
+
+        const std::string& getName() const;
+
+        void setName(const std::string& name);
 
     };
 
@@ -128,6 +154,8 @@ namespace nbtpp {
         friend std::ostream& operator<<(std::ostream& out, nbtpp::Byte& byte) {
             return out << byte.payload;
         }
+
+        static size_t size();
     };
 
     struct Short : public BaseTag {
@@ -143,6 +171,8 @@ namespace nbtpp {
         friend std::ostream& operator<<(std::ostream& out, nbtpp::Short& mShort) {
             return out << mShort.payload;
         }
+
+        static size_t size();
     };
 
     struct Int : public BaseTag {
@@ -160,6 +190,8 @@ namespace nbtpp {
         friend std::ostream& operator<<(std::ostream& out, nbtpp::Int& mInt) {
             return out << mInt.payload;
         }
+
+        static size_t size();
 
     };
 
@@ -179,6 +211,8 @@ namespace nbtpp {
             return out << mLong.payload;
         }
 
+        static size_t size();
+
     };
 
     struct Float : public BaseTag {
@@ -196,6 +230,8 @@ namespace nbtpp {
         friend std::ostream& operator<<(std::ostream& out, nbtpp::Float& mFloat) {
             return out << mFloat.payload;
         }
+
+        static size_t size();
 
     };
 
@@ -215,6 +251,7 @@ namespace nbtpp {
             return out << mDouble.payload;
         }
 
+        static size_t size();
     };
 
     struct ByteArray : public NonspecificIntTag {
@@ -228,9 +265,7 @@ namespace nbtpp {
 
         char* payload;
 
-        static size_t size() {
-            return sizeof(payload);
-        }
+        static size_t size();
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::ByteArray& mByteArray) {
             out << "[";
@@ -243,6 +278,7 @@ namespace nbtpp {
             return out << "]";
         }
 
+        char& operator[](const unsigned int& position);
     };
 
     struct String : public NonspecificShortTag {
@@ -262,6 +298,9 @@ namespace nbtpp {
             return out << mString.payload;
         }
 
+        static size_t size();
+
+        char& operator[](const unsigned int& position);
     };
 
 
@@ -288,12 +327,12 @@ namespace nbtpp {
                     out << ", ";
                 }
             }
-            return out << "]" << size();
+            return out << "]";
         }
 
-        static size_t size() {
-            return sizeof(payload) / 2;
-        }
+        static size_t size();
+
+        int& operator[](const unsigned int& position);
     };
 
     struct LongArray : public NonspecificIntTag {
@@ -307,22 +346,22 @@ namespace nbtpp {
 
         LongArray(const Compound::Content&);
 
-        char* payload;
+        long* payload;
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::LongArray& mLongArray) {
             out << "[";
             for (int i = 0; i < size(); i++) {
                 out << mLongArray.payload[i];
-                if (i != sizeof(payload) - 1) {
+                if (i != size() - 1) {
                     out << ", ";
                 }
             }
             return out << "]";
         }
 
-        static size_t size() {
-            return sizeof(payload) / 8;
-        }
+        long& operator[](const unsigned int& position);
+
+        static size_t size();
     };
 
 }

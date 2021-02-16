@@ -33,35 +33,45 @@ namespace nbtpp {
         std::unique_ptr<std::string> parseTagName();
 
         /**
-         * Parsing the prefix of payload size.
-         * @param lengthOfPrefix Some are 2 bytes, some are 4 bytes.
-         * @return A smart pointer of payload size.
+         * Parsing the prefix of payload length.
+         * @param typeId type id
+         * @return A smart pointer of payload length.
          */
         std::unique_ptr<int> parsePayloadLengthPrefix(const char& typeId);
 
         /**
          * Parsing the payload.
-         * @param payloadLength payload size, it's always from the function 'parsePayloadLengthPrefix(const int& lengthOf Prefix)'
+         * @param payloadLength it's always from the function 'parsePayloadLengthPrefix(const int& lengthOf Prefix)'
+         * @param isNumber Whether the tag is a number.
          * @return A smart pointer of payload bytes array.
          */
         std::unique_ptr<char*> parsePayload(int& payloadLength, bool isNumber);
 
+        /**
+         * Delete internal Compound
+         * @param compound It is in the last layer.
+         * @param it The iterator of compound.
+         */
         void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it);
 
         /**
          * Reading the compound tag.
+         * @param isInlist Whether the current item is in a list.
+         * @return A pointer to a compound.
          */
         Compound* readTagCompound(const bool& isInlist);
 
         /**
          * Reading the regular tags;
-         * @param lengthOfPrefix The length of payload prefix, some are 2 bytes, and some are 4 bytes.
-         * @param payloadLength The length of payload.
+         * @param typeId Type id.
+         * @param isInlist Whether the current item is in a list.
+         * @return Return the pointer of a item if it's in a list.
          */
         char* readTagStandard(char& typeId, const bool& isInlist);
 
         /**
          * Reading the list tag.
+         * @param Whether the list is root.
          */
         void readTagList(bool isRoot);
 
@@ -75,7 +85,7 @@ namespace nbtpp {
         /**
          * Starting to parse a NBT file.
          * @param filePath File path.
-         * @param edi edition.
+         * @param edi Game edition.
          */
         NBT(const char* filePath, const Edition& edi);
 
@@ -92,6 +102,11 @@ namespace nbtpp {
 
         Edition getEdition() const;
 
+        /**
+         * Whether the item is a number.
+         * @param typeId Type number.
+         * @return A boolean.
+         */
         bool isNumber(char& typeId);
 
     };
