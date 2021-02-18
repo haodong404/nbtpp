@@ -13,9 +13,26 @@
 
 namespace nbtpp {
 
+    enum TagID : unsigned char {
+        END = 0x00,
+        BYTE = 0x01,
+        SHORT = 0x02,
+        INT = 0x03,
+        LONG = 0x04,
+        FLOAT = 0x05,
+        DOUBLE = 0x06,
+        BYTE_ARRAY = 0x07,
+        STRING = 0x08,
+        LIST = 0x09,
+        COMPOUND = 0x0A,
+        INT_ARRAY = 0x0B,
+        LONG_ARRAY = 0x0C
+    };
+
     class BaseTag {
     public:
         static size_t length;
+
         void toHex();
 
         static size_t getLength();
@@ -46,21 +63,33 @@ namespace nbtpp {
 
     };
 
+    template<typename T>
+    struct List : public NonspecificShortTag, public std::vector<T> {
+
+        const static unsigned char type_id = 0x09;
+
+        using std::vector<T>::vector;
+
+        List(const int& size) {
+            this->reserve(size);
+        }
+    };
+
     struct Compound : public NonspecificShortTag {
 
         std::string name;
 
-        const static char type_id = 0x0A;
+        const static unsigned char type_id = 0x0A;
 
         /**
          * Using a Content class to store the pointer and size of payload.
          */
         struct Content {
-            char typeId;
+            unsigned char typeId;
             char* ptr; // The first byte pointer of payload
             unsigned int length; // The length of total data;
 
-            Content(const char& typeId, char* ptr, unsigned int& length);
+            Content(const unsigned char& typeId, char* ptr, unsigned int& length);
 
             /**
              * A copy constructor.
@@ -112,34 +141,44 @@ namespace nbtpp {
 
         /**
          * Find the list by name, it just fits with List Tag, DO NOT transfer others.
-         * @tparam Tag The target Tag. It extends BaseList.
+         * @tparam Tag The target Tag. It extends List.
          * @param name Target name.
          * @return The result.
          */
         template<typename Tag>
-        Tag findListByName(const char* name) {
-            return findItemByName<Tag>(name);
+        List<Tag> findListByName(const char* name) {
+            List<Content> temp = *(List<Content>*) itemMap.find(name)->second.ptr;
+
+            List<Tag> result(temp.size());
+
+            for (int i = 0; i < temp.size(); i++) {
+                result.push_back(Tag(temp[i]));
+            }
+
+            return result;
         }
 
         const std::string& getName() const;
 
         void setName(const std::string& name);
 
+        size_t size();
+
     };
+
 
     /**
      * The Tag_End class
      */
     struct End : public BaseTag {
-        const static char type_id = 0x00;
-        const static char payload_size = 0;
+        const static unsigned char type_id = 0x00;
+        const static unsigned char payload_size = 0;
     };
-
 
     struct Byte : public BaseTag {
 
-        const static char type_id = 0x01;
-        const static char payload_size = 1;
+        const static unsigned char type_id = 0x01;
+        const static unsigned char payload_size = 1;
 
         Byte();
 
@@ -147,20 +186,20 @@ namespace nbtpp {
 
         Byte(const Compound::Content&);
 
-        char payload;
+        unsigned char payload;
 
         int toInteger();
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::Byte& byte) {
-            return out << byte.payload;
+            return out << static_cast<unsigned>(byte.payload);
         }
 
         static size_t size();
     };
 
     struct Short : public BaseTag {
-        const static char type_id = 0x02;
-        const static char payload_size = 2;
+        const static unsigned char type_id = 0x02;
+        const static unsigned char payload_size = 2;
 
         Short(const short&);
 
@@ -176,8 +215,8 @@ namespace nbtpp {
     };
 
     struct Int : public BaseTag {
-        const static char type_id = 0x03;
-        const static char payload_size = 4;
+        const static unsigned char type_id = 0x03;
+        const static unsigned char payload_size = 4;
 
         Int();
 
@@ -196,8 +235,8 @@ namespace nbtpp {
     };
 
     struct Long : public BaseTag {
-        const static char type_id = 0x04;
-        const static char payload_size = 8;
+        const static unsigned char type_id = 0x04;
+        const static unsigned char payload_size = 8;
 
         Long();
 
@@ -216,8 +255,8 @@ namespace nbtpp {
     };
 
     struct Float : public BaseTag {
-        const static char type_id = 0x05;
-        const static char payload_size = 4;
+        const static unsigned char type_id = 0x05;
+        const static unsigned char payload_size = 4;
 
         Float();
 
@@ -236,8 +275,8 @@ namespace nbtpp {
     };
 
     struct Double : public BaseTag {
-        const static char type_id = 0x06;
-        const static char payload_size = 8;
+        const static unsigned char type_id = 0x06;
+        const static unsigned char payload_size = 8;
 
         Double();
 
@@ -255,7 +294,7 @@ namespace nbtpp {
     };
 
     struct ByteArray : public NonspecificIntTag {
-        const static char type_id = 0x07;
+        const static unsigned char type_id = 0x07;
 
         ByteArray();
 
@@ -270,8 +309,8 @@ namespace nbtpp {
         friend std::ostream& operator<<(std::ostream& out, nbtpp::ByteArray& mByteArray) {
             out << "[";
             for (int i = 0; i < size(); i++) {
-                out << mByteArray.payload[i];
-                if (i != sizeof(payload) - 1) {
+                out << static_cast<unsigned>(mByteArray.payload[i]);
+                if (i != size() - 1) {
                     out << ", ";
                 }
             }
@@ -281,8 +320,9 @@ namespace nbtpp {
         char& operator[](const unsigned int& position);
     };
 
+
     struct String : public NonspecificShortTag {
-        const static char type_id = 0x08;
+        const static unsigned char type_id = 0x08;
 
         String();
 
@@ -303,13 +343,8 @@ namespace nbtpp {
         char& operator[](const unsigned int& position);
     };
 
-
-    struct List : public NonspecificShortTag {
-        const static char type_id = 0x09;
-    };
-
     struct IntArray : public NonspecificIntTag {
-        const static char type_id = 0x0B;
+        const static unsigned char type_id = 0x0B;
 
         IntArray();
 
@@ -336,7 +371,7 @@ namespace nbtpp {
     };
 
     struct LongArray : public NonspecificIntTag {
-        const static char type_id = 0x0C;
+        const static unsigned char type_id = 0x0C;
 
         LongArray();
 

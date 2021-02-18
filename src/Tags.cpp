@@ -17,7 +17,7 @@ void nbtpp::BaseTag::setLength(size_t length) {
 }
 
 
-nbtpp::Compound::Content::Content(const char& typeId, char* ptr, unsigned int& length)
+nbtpp::Compound::Content::Content(const unsigned char& typeId, char* ptr, unsigned int& length)
         : typeId(typeId), ptr(ptr), length(length) {}
 
 nbtpp::Compound::Content::Content(const nbtpp::Compound::Content& ano)
@@ -50,6 +50,10 @@ const std::string& nbtpp::Compound::getName() const {
 
 void nbtpp::Compound::setName(const std::string& name) {
     Compound::name = name;
+}
+
+size_t nbtpp::Compound::size() {
+    return internalCompound.size() + itemMap.size();
 }
 
 nbtpp::Byte::Byte(const char& payload) : payload(payload) {

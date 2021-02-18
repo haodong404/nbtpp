@@ -5,7 +5,7 @@
 
 #include <stack>
 #include "fstream"
-#include "BaseList.h"
+#include "Tags.h"
 
 namespace nbtpp {
 
@@ -25,7 +25,7 @@ namespace nbtpp {
         bool isInList = false;
         nbtpp::Edition edition;
 
-        std::stack<Compound*> compoundsStack; // The top compound is what the current compound used.
+        std::stack<Compound*> compoundsStack; // The top compound is what the current compound is used.
         /**
          * Parsing the tag name.
          * @return A smart pointer of string.
@@ -37,7 +37,7 @@ namespace nbtpp {
          * @param typeId type id
          * @return A smart pointer of payload length.
          */
-        std::unique_ptr<int> parsePayloadLengthPrefix(const char& typeId);
+        std::unique_ptr<int> parsePayloadLengthPrefix(const unsigned char& typeId);
 
         /**
          * Parsing the payload.
@@ -48,7 +48,7 @@ namespace nbtpp {
         std::unique_ptr<char*> parsePayload(int& payloadLength, bool isNumber);
 
         /**
-         * Delete internal Compound
+         * Delete internal Compounds.
          * @param compound It is in the last layer.
          * @param it The iterator of compound.
          */
@@ -67,7 +67,7 @@ namespace nbtpp {
          * @param isInlist Whether the current item is in a list.
          * @return Return the pointer of a item if it's in a list.
          */
-        char* readTagStandard(char& typeId, const bool& isInlist);
+        char* readTagStandard(unsigned char& typeId, const bool& isInlist);
 
         /**
          * Reading the list tag.
@@ -96,18 +96,21 @@ namespace nbtpp {
          * @param id Tag's ID.
          * @return A smart pointer of size.
          */
-        std::unique_ptr<int> getTagSizeById(const char& id);
+        std::unique_ptr<int> getTagSizeById(const unsigned char& id);
 
         Compound* getRootCompound() const;
 
         Edition getEdition() const;
+
 
         /**
          * Whether the item is a number.
          * @param typeId Type number.
          * @return A boolean.
          */
-        bool isNumber(char& typeId);
+        bool isNumber(unsigned char& typeId);
+
+        int count();
 
     };
 }

@@ -24,4 +24,3 @@ nbtpp::RootCompound::RootCompound(const char* filePath, const nbtpp::Edition& ed
 nbtpp::RootCompound::~RootCompound() {
     delete nbt;
 }
-

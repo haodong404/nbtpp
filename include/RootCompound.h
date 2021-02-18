@@ -20,8 +20,6 @@ namespace nbtpp {
 
     public:
 
-        RootCompound(RootCompound* ano);
-
         RootCompound(nbtpp::NBT* nbt);
 
         RootCompound(const char* filePath, const nbtpp::Edition& edition);
