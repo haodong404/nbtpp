@@ -27,5 +27,6 @@ namespace nbtpp {
         virtual ~RootCompound();
 
         const nbtpp::NBT* getNbt() const;
+
     };
 }

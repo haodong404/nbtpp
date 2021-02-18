@@ -103,23 +103,22 @@ void nbtpp::NBT::readTagList(bool isRoot) {
     int payloadLength = *parsePayloadLengthPrefix(0x09);
 
     char* listPtr = nullptr;
-    if (tagId == Compound::type_id) {
-        isRoot = false; // Set the "isRoot" to false to created new compound pointer.
-        auto* items = new List<Compound*>(payloadLength);
-        for (int i = 0; i < payloadLength; i++) {
-            items->push_back(readTagCompound(true));
-        }
-        listPtr = (char*) items;
-    } else {
-        auto* items = new List<Compound::Content>(payloadLength);
 
-        for (int i = 0; i < payloadLength; i++) {
+    auto* items = new List<Compound::Content>(payloadLength);
+
+    for (int i = 0; i < payloadLength; i++) {
+        if (tagId == COMPOUND) {
+            isRoot = false; // Set the "isRoot" to false to created new compound pointer.
+            unsigned int length = payloadLength;
+            items->emplace_back(tagId, (char*) readTagCompound(true), length);
+        } else {
             char* payload = readTagStandard(tagId, true);
             unsigned int length = sizeof(payload);
             items->emplace_back(tagId, payload, length);
         }
-        listPtr = (char*) items;
     }
+
+    listPtr = (char*) items;
 
     if (isRoot) {
 

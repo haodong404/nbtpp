@@ -8,12 +8,17 @@ void nbtpp::BaseTag::toHex() {
 }
 
 size_t nbtpp::BaseTag::length = 0;
-size_t nbtpp::BaseTag::getLength(){
+
+size_t nbtpp::BaseTag::getLength() {
     return length;
 }
 
 void nbtpp::BaseTag::setLength(size_t length) {
     BaseTag::length = length;
+}
+
+void nbtpp::BaseTag::bind() {
+
 }
 
 
@@ -54,6 +59,13 @@ void nbtpp::Compound::setName(const std::string& name) {
 
 size_t nbtpp::Compound::size() {
     return internalCompound.size() + itemMap.size();
+}
+
+nbtpp::Compound::Compound(const nbtpp::Compound::Content& content)
+        : itemMap(((Compound*) content.ptr)->itemMap), internalCompound(((Compound*) content.ptr)->internalCompound) {}
+
+void nbtpp::Compound::bind() {
+
 }
 
 nbtpp::Byte::Byte(const char& payload) : payload(payload) {
@@ -103,7 +115,7 @@ nbtpp::Int::Int(const nbtpp::Compound::Content& content) {
     this->setLength(content.length);
 }
 
-size_t nbtpp::Int::size(){
+size_t nbtpp::Int::size() {
     return getLength();
 }
 

@@ -42,6 +42,12 @@ namespace nbtpp {
          * @param length
          */
         void setLength(size_t length);
+
+        /**
+         * It has no practical meaning.
+         * Define it for passing compilation.
+         */
+        virtual void bind();
     };
 
     /**
@@ -70,7 +76,7 @@ namespace nbtpp {
 
         using std::vector<T>::vector;
 
-        List(const int& size) {
+        List(const int& size) : NonspecificShortTag() {
             this->reserve(size);
         }
     };
@@ -106,6 +112,8 @@ namespace nbtpp {
 
         Compound(Compound* ano);
 
+        Compound(const Content& content);
+
         /**
          * Add item to content map, it will allocate memory.
          * @param name The name of one item.
@@ -136,7 +144,9 @@ namespace nbtpp {
          */
         template<typename Tag>
         Tag findCompoundByName(const char* name) {
-            return Tag(internalCompound.find(name)->second);
+            Tag tag(internalCompound.find(name)->second);
+            tag.bind();
+            return tag;
         }
 
         /**
@@ -149,10 +159,14 @@ namespace nbtpp {
         List<Tag> findListByName(const char* name) {
             List<Content> temp = *(List<Content>*) itemMap.find(name)->second.ptr;
 
-            List<Tag> result(temp.size());
-
+            List<Tag> result;
             for (int i = 0; i < temp.size(); i++) {
-                result.push_back(Tag(temp[i]));
+                Tag tag(temp[i]);
+                if(temp[0].typeId == COMPOUND){
+                    tag.bind();
+                }
+
+                result.push_back(tag);
             }
 
             return result;
@@ -161,6 +175,8 @@ namespace nbtpp {
         const std::string& getName() const;
 
         void setName(const std::string& name);
+
+        virtual void bind();
 
         size_t size();
 
