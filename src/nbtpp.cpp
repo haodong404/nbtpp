@@ -4,11 +4,10 @@
 #include "nbtpp.h"
 #include <iostream>
 
-nbtpp::NBT::NBT(const char* filePath, const nbtpp::Edition& edi) : in(std::ifstream(filePath)), edition(edi) {
-    if (in.is_open()) {
-    }
-    while (!in.eof()) {
-        char typeId = in.get();
+nbtpp::NBT::NBT(std::istream* m_in, const nbtpp::Edition& edi) : in(m_in), edition(edi) {
+
+    while (!in->eof()) {
+        char typeId = this->in->get();
         if (typeId == nbtpp::TagID::COMPOUND) {
             rootCompound = new Compound();
             compoundsStack.push(rootCompound);
@@ -23,7 +22,6 @@ nbtpp::NBT::NBT(const char* filePath, const nbtpp::Edition& edi) : in(std::ifstr
 }
 
 nbtpp::NBT::~NBT() {
-    this->in.close();
     // Releasing the memory
     deleteInternalCompounds(*getRootCompound(), getRootCompound()->internalCompound.begin());
 }
@@ -90,6 +88,7 @@ char* nbtpp::NBT::readTagStandard(unsigned char& typeId, const bool& isInList) {
         }
         return result;
     }
+
     next();
     return nullptr;
 }
@@ -97,7 +96,7 @@ char* nbtpp::NBT::readTagStandard(unsigned char& typeId, const bool& isInList) {
 void nbtpp::NBT::readTagList(bool isRoot) {
 
     auto tagName = parseTagName();
-    unsigned char tagId = in.get();
+    unsigned char tagId = in->get();
     auto tagSize = getTagSizeById(tagId);
 
     int payloadLength = *parsePayloadLengthPrefix(0x09);
@@ -136,18 +135,18 @@ std::unique_ptr<std::string> nbtpp::NBT::parseTagName() {
     short nameSize;
     if (getEdition() == nbtpp::Edition::BEDROCK) {
         for (char i = 0; i < 2; i++) {
-            *((char*) &nameSize + i) = in.get();
+            *((char*) &nameSize + i) = in->get();
         }
     } else {
         for (char i = 1; i >= 0; i--) { // Numbers are stored as little endian in memory.
-            *((char*) &nameSize + i) = in.get();
+            *((char*) &nameSize + i) = in->get();
         }
     }
 
     auto name = std::make_unique<std::string>();
     if (nameSize != 0) {
         for (short i = 0; i < nameSize; i++) {
-            name->push_back(in.get());
+            name->push_back(in->get());
         }
     }
     return std::move(name);
@@ -173,11 +172,11 @@ std::unique_ptr<int> nbtpp::NBT::parsePayloadLengthPrefix(const unsigned char& t
 
     if (getEdition() == nbtpp::Edition::BEDROCK) {
         for (int i = 0; i < lengthOfPrefix; i++) {
-            *((char*) result.get() + i) = in.get();
+            *((char*) result.get() + i) = in->get();
         }
     } else {
         for (int i = lengthOfPrefix - 1; i >= 0; i--) {
-            *((char*) result.get() + i) = in.get();
+            *((char*) result.get() + i) = in->get();
         }
     }
     if (typeId == nbtpp::ByteArray::type_id ||
@@ -192,11 +191,11 @@ std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadLength, bool isNumbe
     auto result = std::make_unique<char*>(new char[payloadLength]);
     if (isNumber && getEdition() == nbtpp::Edition::JAVA) {
         for (short i = payloadLength - 1; i >= 0; i--) {
-            (*result)[i] = in.get();
+            (*result)[i] = in->get();
         }
     } else {
         for (short i = 0; i < payloadLength; i++) {
-            (*result)[i] = in.get();
+            (*result)[i] = in->get();
         }
     }
     return std::move(result);
@@ -204,9 +203,9 @@ std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadLength, bool isNumbe
 
 void nbtpp::NBT::next() {
 
-    unsigned char nextId = in.get();
+    unsigned char nextId = in->get();
 
-    if (in.eof()) {
+    if (in->eof()) {
         return;
     }
 

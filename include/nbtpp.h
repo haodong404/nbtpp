@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stack>
-#include "fstream"
+#include "istream"
 #include "Tags.h"
 
 namespace nbtpp {
@@ -19,7 +19,7 @@ namespace nbtpp {
 
     class NBT {
     private:
-        std::ifstream in;
+        std::istream* in;
         Compound* rootCompound; // It contains the root compound
         bool isRoot = true;
         bool isInList = false;
@@ -82,12 +82,16 @@ namespace nbtpp {
 
     public:
 
+        NBT() : in(nullptr){
+
+        }
+
         /**
          * Starting to parse a NBT file.
          * @param filePath File path.
          * @param edi Game edition.
          */
-        NBT(const char* filePath, const Edition& edi);
+        NBT(std::istream* in, const Edition& edi);
 
         virtual ~NBT();
 

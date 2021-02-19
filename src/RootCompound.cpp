@@ -2,6 +2,7 @@
 // Created by Zachary on 2021/2/7.
 //
 
+#include <fstream>
 #include "RootCompound.h"
 
 
@@ -15,9 +16,12 @@ nbtpp::RootCompound::RootCompound(nbtpp::NBT* nbt) : nbt(nbt) {
 
 nbtpp::RootCompound::RootCompound(const char* filePath, const nbtpp::Edition& edition) {
     if (nbt == nullptr) {
-        nbt = new NBT(filePath, edition);
+        std::ifstream in;
+        in.open(filePath);
+        nbt = new NBT(&in, edition);
         this->itemMap = nbt->getRootCompound()->itemMap;
         this->internalCompound = nbt->getRootCompound()->internalCompound;
+        in.close();
     }
 }
 

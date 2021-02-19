@@ -7,14 +7,12 @@ void nbtpp::BaseTag::toHex() {
     std::cout << "Hex" << std::endl;
 }
 
-size_t nbtpp::BaseTag::length = 0;
-
-size_t nbtpp::BaseTag::getLength() {
+size_t nbtpp::BaseTag::getLength() const {
     return length;
 }
 
 void nbtpp::BaseTag::setLength(size_t length) {
-    BaseTag::length = length;
+    this->length = length;
 }
 
 void nbtpp::BaseTag::bind() {

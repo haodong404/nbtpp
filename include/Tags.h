@@ -31,11 +31,11 @@ namespace nbtpp {
 
     class BaseTag {
     public:
-        static size_t length;
+        size_t length;
 
         void toHex();
 
-        static size_t getLength();
+        size_t getLength() const;
 
         /**
          * Set the length of data.
@@ -162,7 +162,7 @@ namespace nbtpp {
             List<Tag> result;
             for (int i = 0; i < temp.size(); i++) {
                 Tag tag(temp[i]);
-                if(temp[0].typeId == COMPOUND){
+                if (temp[0].typeId == COMPOUND) {
                     tag.bind();
                 }
 
@@ -210,7 +210,7 @@ namespace nbtpp {
             return out << static_cast<unsigned>(byte.payload);
         }
 
-        static size_t size();
+        size_t size();
     };
 
     struct Short : public BaseTag {
@@ -227,7 +227,7 @@ namespace nbtpp {
             return out << mShort.payload;
         }
 
-        static size_t size();
+        size_t size();
     };
 
     struct Int : public BaseTag {
@@ -246,7 +246,7 @@ namespace nbtpp {
             return out << mInt.payload;
         }
 
-        static size_t size();
+        size_t size();
 
     };
 
@@ -266,7 +266,7 @@ namespace nbtpp {
             return out << mLong.payload;
         }
 
-        static size_t size();
+        size_t size();
 
     };
 
@@ -286,7 +286,7 @@ namespace nbtpp {
             return out << mFloat.payload;
         }
 
-        static size_t size();
+        size_t size();
 
     };
 
@@ -306,7 +306,7 @@ namespace nbtpp {
             return out << mDouble.payload;
         }
 
-        static size_t size();
+        size_t size();
     };
 
     struct ByteArray : public NonspecificIntTag {
@@ -320,13 +320,13 @@ namespace nbtpp {
 
         char* payload;
 
-        static size_t size();
+        size_t size();
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::ByteArray& mByteArray) {
             out << "[";
-            for (int i = 0; i < size(); i++) {
+            for (int i = 0; i < mByteArray.size(); i++) {
                 out << static_cast<unsigned>(mByteArray.payload[i]);
-                if (i != size() - 1) {
+                if (i != mByteArray.size() - 1) {
                     out << ", ";
                 }
             }
@@ -354,7 +354,7 @@ namespace nbtpp {
             return out << mString.payload;
         }
 
-        static size_t size();
+        size_t size();
 
         char& operator[](const unsigned int& position);
     };
@@ -372,16 +372,16 @@ namespace nbtpp {
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::IntArray& mIntArray) {
             out << "[";
-            for (int i = 0; i < size(); i++) {
+            for (int i = 0; i < mIntArray.size(); i++) {
                 out << mIntArray.payload[i];
-                if (i != size() - 1) {
+                if (i != mIntArray.size() - 1) {
                     out << ", ";
                 }
             }
             return out << "]";
         }
 
-        static size_t size();
+        size_t size();
 
         int& operator[](const unsigned int& position);
     };
@@ -401,9 +401,9 @@ namespace nbtpp {
 
         friend std::ostream& operator<<(std::ostream& out, nbtpp::LongArray& mLongArray) {
             out << "[";
-            for (int i = 0; i < size(); i++) {
+            for (int i = 0; i < mLongArray.size(); i++) {
                 out << mLongArray.payload[i];
-                if (i != size() - 1) {
+                if (i != mLongArray.size() - 1) {
                     out << ", ";
                 }
             }
@@ -412,7 +412,7 @@ namespace nbtpp {
 
         long& operator[](const unsigned int& position);
 
-        static size_t size();
+        size_t size();
     };
 
 }
