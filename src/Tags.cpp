@@ -1,10 +1,11 @@
 //
 // Created by Zachary on 2021/2/2.
 //
+
 #include "Tags.h"
 
-void nbtpp::BaseTag::toHex() {
-    std::cout << "Hex" << std::endl;
+nbtpp::Hex nbtpp::BaseTag::toHex() {
+    return Hex();
 }
 
 size_t nbtpp::BaseTag::getLength() const {
@@ -19,22 +20,39 @@ void nbtpp::BaseTag::bind() {
 
 }
 
+const std::string& nbtpp::BaseTag::getName() const {
+    return name;
+}
 
-nbtpp::Compound::Content::Content(const unsigned char& typeId, char* ptr, unsigned int& length)
-        : typeId(typeId), ptr(ptr), length(length) {}
+void nbtpp::BaseTag::setName(const std::string& name) {
+    BaseTag::name = name;
+}
+
+nbtpp::Edition nbtpp::BaseTag::getEdition() const {
+    return edition;
+}
+
+void nbtpp::BaseTag::setEdition(nbtpp::Edition edition) {
+    BaseTag::edition = edition;
+}
+
+
+nbtpp::Compound::Content::Content(const nbtpp::Edition& edition, const unsigned char& typeId, unsigned char* ptr,
+                                  unsigned int& length)
+        : edition(edition), typeId(typeId), ptr(ptr), length(length) {}
 
 nbtpp::Compound::Content::Content(const nbtpp::Compound::Content& ano)
-        : typeId(ano.typeId), ptr(ano.ptr), length(ano.length) {}
+        : edition(ano.edition), typeId(ano.typeId), ptr(ano.ptr), length(ano.length) {}
 
-char* nbtpp::Compound::addItem(std::string& name, const char& typeId, unsigned int& length, char* payload) {
+unsigned char* nbtpp::Compound::addItem(std::string& name, const char& typeId, unsigned int& length, char* payload) {
 
-    char* result = (char*) malloc(length);
+    auto* result = (unsigned char*) malloc(length);
 
     if (result != nullptr) {
         for (int i = 0; i < length; i++) {
             result[i] = payload[i];
         }
-        Content content(typeId, result, length);
+        Content content(getEdition(), typeId, result, length);
         itemMap.insert(std::make_pair(name, content));
     }
 
@@ -45,14 +63,6 @@ nbtpp::Compound::Compound() {}
 
 nbtpp::Compound::Compound(nbtpp::Compound* ano) : itemMap(ano->itemMap), internalCompound(ano->internalCompound) {
 
-}
-
-const std::string& nbtpp::Compound::getName() const {
-    return name;
-}
-
-void nbtpp::Compound::setName(const std::string& name) {
-    Compound::name = name;
 }
 
 size_t nbtpp::Compound::size() {
@@ -66,8 +76,14 @@ void nbtpp::Compound::bind() {
 
 }
 
-nbtpp::Byte::Byte(const char& payload) : payload(payload) {
+nbtpp::Hex nbtpp::Compound::toHex() {
+    return BaseTag::toHex();
+}
+
+
+nbtpp::Byte::Byte(const unsigned char& payload) : payload(payload) {
     this->setLength(sizeof(payload));
+    *this->raw = payload;
 }
 
 nbtpp::Byte::Byte() {
@@ -77,6 +93,8 @@ nbtpp::Byte::Byte() {
 nbtpp::Byte::Byte(const nbtpp::Compound::Content& content) {
     payload = *content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
+    this->raw = content.ptr;
 }
 
 int nbtpp::Byte::toInteger() {
@@ -87,6 +105,11 @@ size_t nbtpp::Byte::size() {
     return getLength();
 }
 
+nbtpp::Hex nbtpp::Byte::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+}
+
 nbtpp::Short::Short(const short& payload) : payload(payload) {
     this->setLength(sizeof(payload));
 }
@@ -94,10 +117,17 @@ nbtpp::Short::Short(const short& payload) : payload(payload) {
 nbtpp::Short::Short(const nbtpp::Compound::Content& content) {
     payload = *(short*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 size_t nbtpp::Short::size() {
     return getLength();
+}
+
+nbtpp::Hex nbtpp::Short::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
 }
 
 nbtpp::Int::Int(const int& payload) : payload(payload) {
@@ -111,10 +141,17 @@ nbtpp::Int::Int() {
 nbtpp::Int::Int(const nbtpp::Compound::Content& content) {
     payload = *(int*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 size_t nbtpp::Int::size() {
     return getLength();
+}
+
+nbtpp::Hex nbtpp::Int::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
 }
 
 nbtpp::Long::Long() {
@@ -124,6 +161,7 @@ nbtpp::Long::Long() {
 nbtpp::Long::Long(const nbtpp::Compound::Content& content) {
     payload = *(long*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 nbtpp::Long::Long(const long& payload) : payload(payload) {
@@ -134,6 +172,12 @@ size_t nbtpp::Long::size() {
     return getLength();
 }
 
+nbtpp::Hex nbtpp::Long::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
+}
+
 nbtpp::Float::Float(const float& payload) : payload(payload) {
     this->setLength(sizeof(payload));
 }
@@ -141,6 +185,7 @@ nbtpp::Float::Float(const float& payload) : payload(payload) {
 nbtpp::Float::Float(const nbtpp::Compound::Content& content) {
     payload = *(float*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 nbtpp::Float::Float() {
@@ -151,6 +196,12 @@ size_t nbtpp::Float::size() {
     return getLength();
 }
 
+nbtpp::Hex nbtpp::Float::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
+}
+
 nbtpp::Double::Double(const double& payload) : payload(payload) {
     this->setLength(sizeof(payload));
 }
@@ -158,6 +209,7 @@ nbtpp::Double::Double(const double& payload) : payload(payload) {
 nbtpp::Double::Double(const nbtpp::Compound::Content& content) {
     payload = *(double*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 nbtpp::Double::Double() {
@@ -166,6 +218,12 @@ nbtpp::Double::Double() {
 
 size_t nbtpp::Double::size() {
     return getLength();
+}
+
+nbtpp::Hex nbtpp::Double::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
 }
 
 nbtpp::String::String(const std::string& payload) : payload(payload) {
@@ -181,8 +239,9 @@ nbtpp::String::String(const char* string) : payload(string) {
 }
 
 nbtpp::String::String(const nbtpp::Compound::Content& content) {
-    payload = content.ptr;
+    payload = (char*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 size_t nbtpp::String::size() {
@@ -193,12 +252,19 @@ char& nbtpp::String::operator[](const unsigned int& position) {
     return this->payload[position];
 }
 
+nbtpp::Hex nbtpp::String::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
+}
+
 nbtpp::ByteArray::ByteArray(const nbtpp::Compound::Content& content) {
     this->payload = content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
-nbtpp::ByteArray::ByteArray(char* payload) : payload(payload) {
+nbtpp::ByteArray::ByteArray(unsigned char* payload) : payload(payload) {
     this->setLength(sizeof(payload));
 }
 
@@ -206,8 +272,14 @@ size_t nbtpp::ByteArray::size() {
     return getLength();
 }
 
-char& nbtpp::ByteArray::operator[](const unsigned int& position) {
+unsigned char& nbtpp::ByteArray::operator[](const unsigned int& position) {
     return *(this->payload + position);
+}
+
+nbtpp::Hex nbtpp::ByteArray::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
 }
 
 nbtpp::IntArray::IntArray() {
@@ -221,6 +293,7 @@ nbtpp::IntArray::IntArray(int* payload) : payload(payload) {
 nbtpp::IntArray::IntArray(const nbtpp::Compound::Content& content) {
     this->payload = (int*) content.ptr;
     this->setLength(content.length);
+    this->setEdition(content.edition);
 }
 
 int& nbtpp::IntArray::operator[](const unsigned int& position) {
@@ -231,17 +304,23 @@ size_t nbtpp::IntArray::size() {
     return getLength() / 4;
 }
 
+nbtpp::Hex nbtpp::IntArray::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
+}
+
 nbtpp::LongArray::LongArray() {
 
 }
 
 nbtpp::LongArray::LongArray(long* payload) {
     this->setLength(sizeof(payload));
-
 }
 
 nbtpp::LongArray::LongArray(const nbtpp::Compound::Content& content) {
     this->payload = (long*) content.ptr;
+    this->setEdition(content.edition);
 }
 
 nbtpp::LongArray::LongArray(char*) {
@@ -254,4 +333,14 @@ size_t nbtpp::LongArray::size() {
 
 long& nbtpp::LongArray::operator[](const unsigned int& position) {
     return *(this->payload + position);
+}
+
+nbtpp::Hex nbtpp::LongArray::toHex() {
+    Hex hex(getEdition());
+    hex.pushSpecific(type_id, getName(), raw);
+    return hex;
+}
+
+nbtpp::Hex nbtpp::End::toHex() {
+    return BaseTag::toHex();
 }

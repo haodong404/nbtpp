@@ -20,6 +20,8 @@ namespace nbtpp {
 
     public:
 
+        RootCompound();
+
         RootCompound(nbtpp::NBT* nbt);
 
         RootCompound(const char* filePath, const nbtpp::Edition& edition);
@@ -28,5 +30,6 @@ namespace nbtpp {
 
         const nbtpp::NBT* getNbt() const;
 
+        Hex toHex() override;
     };
 }

@@ -28,3 +28,13 @@ nbtpp::RootCompound::RootCompound(const char* filePath, const nbtpp::Edition& ed
 nbtpp::RootCompound::~RootCompound() {
     delete nbt;
 }
+
+nbtpp::RootCompound::RootCompound() : Compound() {
+
+}
+
+nbtpp::Hex nbtpp::RootCompound::toHex() {
+    Hex hex(getEdition());
+
+    return hex;
+}

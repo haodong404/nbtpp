@@ -5,17 +5,10 @@
 
 #include <stack>
 #include "istream"
+#include "Edition.h"
 #include "Tags.h"
 
 namespace nbtpp {
-
-    /**
-     * Different editions use different endian;
-     */
-    enum Edition {
-        BEDROCK,
-        JAVA
-    };
 
     class NBT {
     private:

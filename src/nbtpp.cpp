@@ -109,11 +109,11 @@ void nbtpp::NBT::readTagList(bool isRoot) {
         if (tagId == COMPOUND) {
             isRoot = false; // Set the "isRoot" to false to created new compound pointer.
             unsigned int length = payloadLength;
-            items->emplace_back(tagId, (char*) readTagCompound(true), length);
+            items->emplace_back(getEdition(),tagId, (char*) readTagCompound(true), length);
         } else {
             char* payload = readTagStandard(tagId, true);
             unsigned int length = sizeof(payload);
-            items->emplace_back(tagId, payload, length);
+            items->emplace_back(getEdition(),tagId, payload, length);
         }
     }
 
@@ -124,7 +124,7 @@ void nbtpp::NBT::readTagList(bool isRoot) {
     } else {
         Compound* compound = compoundsStack.top();
         unsigned int totalLength = sizeof(listPtr);
-        compound->itemMap.insert(std::make_pair(*tagName, Compound::Content(tagId, listPtr, totalLength)));
+        compound->itemMap.insert(std::make_pair(*tagName, Compound::Content(getEdition(),tagId, listPtr, totalLength)));
     }
     this->isInList = false;
     next();

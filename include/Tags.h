@@ -10,6 +10,8 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "Hex.h"
+#include "Edition.h"
 
 namespace nbtpp {
 
@@ -30,10 +32,14 @@ namespace nbtpp {
     };
 
     class BaseTag {
-    public:
+    private:
+        std::string name;
         size_t length;
+        Edition edition = JAVA;
+    public:
+        unsigned char* raw;
 
-        void toHex();
+        virtual Hex toHex();
 
         size_t getLength() const;
 
@@ -48,6 +54,15 @@ namespace nbtpp {
          * Define it for passing compilation.
          */
         virtual void bind();
+
+        const std::string& getName() const;
+
+        void setName(const std::string& name);
+
+        Edition getEdition() const;
+
+        void setEdition(Edition edition);
+
     };
 
     /**
@@ -72,30 +87,30 @@ namespace nbtpp {
     template<typename T>
     struct List : public NonspecificShortTag, public std::vector<T> {
 
-        const static unsigned char type_id = 0x09;
+        const static unsigned char type_id = LIST;
 
         using std::vector<T>::vector;
 
         List(const int& size) : NonspecificShortTag() {
             this->reserve(size);
         }
+
     };
 
     struct Compound : public NonspecificShortTag {
 
-        std::string name;
-
-        const static unsigned char type_id = 0x0A;
+        const static unsigned char type_id = COMPOUND;
 
         /**
          * Using a Content class to store the pointer and size of payload.
          */
         struct Content {
             unsigned char typeId;
-            char* ptr; // The first byte pointer of payload
+            unsigned char* ptr; // The first byte pointer of payload
             unsigned int length; // The length of total data;
+            Edition edition;
 
-            Content(const unsigned char& typeId, char* ptr, unsigned int& length);
+            Content(const Edition& edition, const unsigned char& typeId, unsigned char* ptr, unsigned int& length);
 
             /**
              * A copy constructor.
@@ -121,7 +136,7 @@ namespace nbtpp {
          * @param payload The payload.
          * @return the target data's pointer.
          */
-        char* addItem(std::string& name, const char& typeId, unsigned int& length, char* payload);
+        unsigned char* addItem(std::string& name, const char& typeId, unsigned int& length, char* payload);
 
 
         /**
@@ -133,7 +148,9 @@ namespace nbtpp {
          */
         template<typename Tag>
         Tag findItemByName(const char* name) {
-            return Tag(itemMap.find(name)->second);
+            Tag tag(itemMap.find(name)->second);
+            tag.setName(name);
+            return tag;
         }
 
         /**
@@ -146,6 +163,7 @@ namespace nbtpp {
         Tag findCompoundByName(const char* name) {
             Tag tag(internalCompound.find(name)->second);
             tag.bind();
+            tag.setName(name);
             return tag;
         }
 
@@ -165,21 +183,18 @@ namespace nbtpp {
                 if (temp[0].typeId == COMPOUND) {
                     tag.bind();
                 }
-
                 result.push_back(tag);
             }
 
+            result.setName(name);
             return result;
         }
-
-        const std::string& getName() const;
-
-        void setName(const std::string& name);
 
         virtual void bind();
 
         size_t size();
 
+        Hex toHex() override;
     };
 
 
@@ -187,18 +202,20 @@ namespace nbtpp {
      * The Tag_End class
      */
     struct End : public BaseTag {
-        const static unsigned char type_id = 0x00;
+        const static unsigned char type_id = END;
         const static unsigned char payload_size = 0;
+
+        Hex toHex() override;
     };
 
     struct Byte : public BaseTag {
 
-        const static unsigned char type_id = 0x01;
+        const static unsigned char type_id = BYTE;
         const static unsigned char payload_size = 1;
 
         Byte();
 
-        Byte(const char& payload);
+        Byte(const unsigned char& payload);
 
         Byte(const Compound::Content&);
 
@@ -211,10 +228,12 @@ namespace nbtpp {
         }
 
         size_t size();
+
+        Hex toHex() override;
     };
 
     struct Short : public BaseTag {
-        const static unsigned char type_id = 0x02;
+        const static unsigned char type_id = SHORT;
         const static unsigned char payload_size = 2;
 
         Short(const short&);
@@ -228,10 +247,12 @@ namespace nbtpp {
         }
 
         size_t size();
+
+        Hex toHex() override;
     };
 
     struct Int : public BaseTag {
-        const static unsigned char type_id = 0x03;
+        const static unsigned char type_id = INT;
         const static unsigned char payload_size = 4;
 
         Int();
@@ -248,10 +269,11 @@ namespace nbtpp {
 
         size_t size();
 
+        Hex toHex() override;
     };
 
     struct Long : public BaseTag {
-        const static unsigned char type_id = 0x04;
+        const static unsigned char type_id = LONG;
         const static unsigned char payload_size = 8;
 
         Long();
@@ -268,10 +290,11 @@ namespace nbtpp {
 
         size_t size();
 
+        Hex toHex() override;
     };
 
     struct Float : public BaseTag {
-        const static unsigned char type_id = 0x05;
+        const static unsigned char type_id = FLOAT;
         const static unsigned char payload_size = 4;
 
         Float();
@@ -288,10 +311,11 @@ namespace nbtpp {
 
         size_t size();
 
+        Hex toHex() override;
     };
 
     struct Double : public BaseTag {
-        const static unsigned char type_id = 0x06;
+        const static unsigned char type_id = DOUBLE;
         const static unsigned char payload_size = 8;
 
         Double();
@@ -307,18 +331,20 @@ namespace nbtpp {
         }
 
         size_t size();
+
+        Hex toHex() override;
     };
 
     struct ByteArray : public NonspecificIntTag {
-        const static unsigned char type_id = 0x07;
+        const static unsigned char type_id = BYTE_ARRAY;
 
         ByteArray();
 
-        ByteArray(char*);
+        ByteArray(unsigned char*);
 
         ByteArray(const Compound::Content&);
 
-        char* payload;
+        unsigned char* payload;
 
         size_t size();
 
@@ -333,12 +359,14 @@ namespace nbtpp {
             return out << "]";
         }
 
-        char& operator[](const unsigned int& position);
+        unsigned char& operator[](const unsigned int& position);
+
+        Hex toHex() override;
     };
 
 
     struct String : public NonspecificShortTag {
-        const static unsigned char type_id = 0x08;
+        const static unsigned char type_id = STRING;
 
         String();
 
@@ -357,10 +385,12 @@ namespace nbtpp {
         size_t size();
 
         char& operator[](const unsigned int& position);
+
+        Hex toHex() override;
     };
 
     struct IntArray : public NonspecificIntTag {
-        const static unsigned char type_id = 0x0B;
+        const static unsigned char type_id = INT_ARRAY;
 
         IntArray();
 
@@ -384,10 +414,12 @@ namespace nbtpp {
         size_t size();
 
         int& operator[](const unsigned int& position);
+
+        Hex toHex() override;
     };
 
     struct LongArray : public NonspecificIntTag {
-        const static unsigned char type_id = 0x0C;
+        const static unsigned char type_id = LONG_ARRAY;
 
         LongArray();
 
@@ -413,6 +445,8 @@ namespace nbtpp {
         long& operator[](const unsigned int& position);
 
         size_t size();
+
+        Hex toHex() override;
     };
 
 }
