@@ -4,20 +4,21 @@
 
 #include "iostream"
 #include "Edition.h"
+#include "TagID.h"
+#include <list>
 
 #pragma once
 
 namespace nbtpp {
     class Hex {
         unsigned short position = 0;
-        unsigned char* data;
+        std::list<unsigned char> bytesList;
         Edition edition = JAVA;
 
-        void pushByte(const unsigned char&);
 
         void pushBytes(const unsigned char*);
 
-        void addIdAndNamePrefix(const unsigned char& id, const  std::string& name);
+        void addIdAndNamePrefix(const unsigned char& id, const std::string& name);
 
     public:
         Hex();
@@ -35,9 +36,11 @@ namespace nbtpp {
 
         void pushSpecific(const unsigned char& id, const std::string& name, const unsigned char*);
 
-        void pushShortNonspecific(const unsigned char& id, std::string& name, const unsigned char*);
+        void pushShortNonspecific(const unsigned char& id, const std::string& name, const unsigned char*);
 
-        void pushIntNonspecific(const unsigned char& id, std::string& name, const unsigned char*);
+        void pushIntNonspecific(const unsigned char& id, const std::string& name, const unsigned char*);
+
+        void pushById(const unsigned char& id, const std::string& name, const unsigned char* paylaod);
 
         Edition getEdition() const;
 

@@ -80,7 +80,6 @@ nbtpp::Hex nbtpp::Compound::toHex() {
     return BaseTag::toHex();
 }
 
-
 nbtpp::Byte::Byte(const unsigned char& payload) : payload(payload) {
     this->setLength(sizeof(payload));
     *this->raw = payload;
@@ -107,7 +106,8 @@ size_t nbtpp::Byte::size() {
 
 nbtpp::Hex nbtpp::Byte::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(BYTE, getName(), raw);
+    return hex;
 }
 
 nbtpp::Short::Short(const short& payload) : payload(payload) {
@@ -126,7 +126,7 @@ size_t nbtpp::Short::size() {
 
 nbtpp::Hex nbtpp::Short::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(SHORT, getName(), raw);
     return hex;
 }
 
@@ -150,7 +150,7 @@ size_t nbtpp::Int::size() {
 
 nbtpp::Hex nbtpp::Int::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(INT, getName(), raw);
     return hex;
 }
 
@@ -170,11 +170,11 @@ nbtpp::Long::Long(const long& payload) : payload(payload) {
 
 size_t nbtpp::Long::size() {
     return getLength();
-}
+} 
 
 nbtpp::Hex nbtpp::Long::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(LONG, getName(), raw);
     return hex;
 }
 
@@ -198,7 +198,7 @@ size_t nbtpp::Float::size() {
 
 nbtpp::Hex nbtpp::Float::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(FLOAT, getName(), raw);
     return hex;
 }
 
@@ -222,7 +222,7 @@ size_t nbtpp::Double::size() {
 
 nbtpp::Hex nbtpp::Double::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(DOUBLE, getName(), raw);
     return hex;
 }
 
@@ -254,7 +254,7 @@ char& nbtpp::String::operator[](const unsigned int& position) {
 
 nbtpp::Hex nbtpp::String::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(STRING, getName(), raw);
     return hex;
 }
 
@@ -278,7 +278,7 @@ unsigned char& nbtpp::ByteArray::operator[](const unsigned int& position) {
 
 nbtpp::Hex nbtpp::ByteArray::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(BYTE_ARRAY, getName(), raw);
     return hex;
 }
 
@@ -306,7 +306,7 @@ size_t nbtpp::IntArray::size() {
 
 nbtpp::Hex nbtpp::IntArray::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(INT_ARRAY, getName(), raw);
     return hex;
 }
 
@@ -337,7 +337,7 @@ long& nbtpp::LongArray::operator[](const unsigned int& position) {
 
 nbtpp::Hex nbtpp::LongArray::toHex() {
     Hex hex(getEdition());
-    hex.pushSpecific(type_id, getName(), raw);
+    hex.pushSpecific(LONG_ARRAY, getName(), raw);
     return hex;
 }
 

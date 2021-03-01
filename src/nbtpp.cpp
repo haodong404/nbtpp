@@ -23,10 +23,11 @@ nbtpp::NBT::NBT(std::istream* m_in, const nbtpp::Edition& edi) : in(m_in), editi
 
 nbtpp::NBT::~NBT() {
     // Releasing the memory
-    deleteInternalCompounds(*getRootCompound(), getRootCompound()->internalCompound.begin());
+    auto internalCompoundIt = getRootCompound()->internalCompound.begin();
+    deleteInternalCompounds(*getRootCompound(), internalCompoundIt);
 }
 
-void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it) {
+void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it) {
     for (auto i = compound.itemMap.begin(); i != compound.itemMap.end(); i++) {
         free(i->second.ptr);
     }
@@ -101,7 +102,7 @@ void nbtpp::NBT::readTagList(bool isRoot) {
 
     int payloadLength = *parsePayloadLengthPrefix(0x09);
 
-    char* listPtr = nullptr;
+    unsigned char* listPtr = nullptr;
 
     auto* items = new List<Compound::Content>(payloadLength);
 
@@ -109,22 +110,23 @@ void nbtpp::NBT::readTagList(bool isRoot) {
         if (tagId == COMPOUND) {
             isRoot = false; // Set the "isRoot" to false to created new compound pointer.
             unsigned int length = payloadLength;
-            items->emplace_back(getEdition(),tagId, (char*) readTagCompound(true), length);
+            items->emplace_back(getEdition(), tagId, (unsigned char*) readTagCompound(true), length);
         } else {
-            char* payload = readTagStandard(tagId, true);
+            unsigned char* payload = (unsigned char*) (readTagStandard(tagId, true));
             unsigned int length = sizeof(payload);
-            items->emplace_back(getEdition(),tagId, payload, length);
+            items->emplace_back(getEdition(), tagId, payload, length);
         }
     }
 
-    listPtr = (char*) items;
+    listPtr = (unsigned char*) items;
 
     if (isRoot) {
 
     } else {
         Compound* compound = compoundsStack.top();
         unsigned int totalLength = sizeof(listPtr);
-        compound->itemMap.insert(std::make_pair(*tagName, Compound::Content(getEdition(),tagId, listPtr, totalLength)));
+        compound->itemMap.insert(
+                std::make_pair(*tagName, Compound::Content(getEdition(), tagId, listPtr, totalLength)));
     }
     this->isInList = false;
     next();
@@ -268,4 +270,23 @@ bool nbtpp::NBT::isNumber(unsigned char& typeId) {
 
 int nbtpp::NBT::count() {
     return getRootCompound()->itemMap.size() + getRootCompound()->internalCompound.size();
+}
+
+nbtpp::Hex nbtpp::NBT::toHex() {
+    Hex hex(getEdition());
+    auto internalCompoundIt = getRootCompound()->internalCompound.begin();
+    toHex(hex, getRootCompound(), internalCompoundIt);
+    return hex;
+}
+
+void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
+    for (const auto& i : compound->itemMap) {
+        hex.pushById(i.second.typeId, i.first, i.second.ptr);
+    }
+
+    if (it != compound->internalCompound.end()) {
+        auto i = it->second->internalCompound.begin();
+        toHex(hex, it->second, i);
+        it++;
+    }
 }

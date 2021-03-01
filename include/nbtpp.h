@@ -45,7 +45,7 @@ namespace nbtpp {
          * @param compound It is in the last layer.
          * @param it The iterator of compound.
          */
-        void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator it);
+        void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it);
 
         /**
          * Reading the compound tag.
@@ -72,6 +72,8 @@ namespace nbtpp {
          * The judgment statement of recursion.
          */
         void next();
+
+        void toHex(Hex& hex, Compound* compound, std::map<std::string, Compound*>::iterator& it);
 
     public:
 
@@ -108,6 +110,8 @@ namespace nbtpp {
         bool isNumber(unsigned char& typeId);
 
         int count();
+
+        Hex toHex();
 
     };
 }
