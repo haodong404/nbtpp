@@ -73,6 +73,12 @@ namespace nbtpp {
          */
         void next();
 
+        /**
+         * Convert the data in the root compound into a class "Hex". And this function is for recursion.
+         * @param hex The reference of a Hex instance.
+         * @param compound
+         * @param it
+         */
         void toHex(Hex& hex, Compound* compound, std::map<std::string, Compound*>::iterator& it);
 
     public:
@@ -97,6 +103,10 @@ namespace nbtpp {
          */
         std::unique_ptr<int> getTagSizeById(const unsigned char& id);
 
+        /**
+         * Get the root compound that the NBT contains.
+         * @return The pointer of the root compound.
+         */
         Compound* getRootCompound() const;
 
         Edition getEdition() const;
@@ -108,8 +118,16 @@ namespace nbtpp {
          */
         bool isNumber(unsigned char& typeId);
 
+        /**
+         * It returns the total number of items in the root compound.
+         * @return the count.
+         */
         int count();
 
+        /**
+         * Get the class Hex from the data.
+         * @return A Hex instance.
+         */
         Hex toHex();
 
     };

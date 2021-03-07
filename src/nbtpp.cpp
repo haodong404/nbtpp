@@ -277,7 +277,7 @@ nbtpp::Hex nbtpp::NBT::toHex() {
     auto internalCompoundIt = getRootCompound()->internalCompound.begin();
     hex.addIdAndNamePrefix(COMPOUND, getRootCompound()->getName());
     toHex(hex, getRootCompound(), internalCompoundIt);
-    hex.pushByte(END);
+    hex.insertByte(END);
     return hex;
 }
 
@@ -288,7 +288,7 @@ nbtpp::Hex nbtpp::NBT::toHex() {
         std::cout << temp << std::endl;
         hex.addIdAndNamePrefix(COMPOUND, temp);
         toHex(hex, it->second, i);
-        hex.pushByte(END);
+        hex.insertByte(END);
         it++;
     }
 

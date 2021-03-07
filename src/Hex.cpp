@@ -32,13 +32,13 @@ std::string nbtpp::Hex::toString() {
 }
 
 
-void nbtpp::Hex::pushBytes(const unsigned char* payload) {
-    for (int i = 0; i < sizeof(payload); i++) {
-        bytesList.emplace_back(payload[i]);
+void nbtpp::Hex::insertBytes(const unsigned char* payload) {
+    for (int i = 0; i < sizeof(bytes); i++) {
+        bytesList.emplace_back(bytes[i]);
     }
 }
 
-void nbtpp::Hex::pushByte(const unsigned char& byte) {
+void nbtpp::Hex::insertByte(const unsigned char& byte) {
     bytesList.emplace_back(byte);
 }
 
@@ -46,11 +46,11 @@ void nbtpp::Hex::pushSpecific(const unsigned char& id, const std::string& name, 
     addIdAndNamePrefix(id, name);
     if (getEdition() == JAVA) {
         for (int i = 0; i < sizeof(payload); --i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     } else {
         for (int i = sizeof(payload) - 1; i >= 0; --i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     }
 }
@@ -59,16 +59,16 @@ void nbtpp::Hex::pushShortNonspecific(const unsigned char& id, const std::string
     addIdAndNamePrefix(id, name);
     short payloadSize = sizeof(payload);
     if (getEdition() == JAVA) {
-        pushByte(*(char*) &payloadSize);
-        pushByte(*(char*) (&payloadSize + 1));
+        insertByte(*(char*) &payloadSize);
+        insertByte(*(char*) (&payloadSize + 1));
         for (int i = 0; i < payloadSize; ++i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     } else {
-        pushByte(*(char*) (&payloadSize + 1));
-        pushByte(*(char*) &payloadSize);
+        insertByte(*(char*) (&payloadSize + 1));
+        insertByte(*(char*) &payloadSize);
         for (int i = payloadSize - 1; i >= 0; --i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     }
 }
@@ -78,17 +78,17 @@ void nbtpp::Hex::pushIntNonspecific(const unsigned char& id, const std::string& 
     int payloadSize = sizeof(payload);
     if (getEdition() == BEDROCK) {
         for (int i = 0; i < 4; ++i) {
-            pushByte(*(char*) (&payloadSize + i));
+            insertByte(*(char*) (&payloadSize + i));
         }
         for (int i = 0; i < payloadSize; ++i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     } else {
         for (int i = 3; i >= 0; --i) {
-            pushByte(*(char*) (&payloadSize + i));
+            insertByte(*(char*) (&payloadSize + i));
         }
         for (int i = 0; i < payloadSize; ++i) {
-            pushByte(payload[i]);
+            insertByte(payload[i]);
         }
     }
 }
@@ -102,19 +102,19 @@ void nbtpp::Hex::setEdition(nbtpp::Edition edition) {
 }
 
 void nbtpp::Hex::addIdAndNamePrefix(const unsigned char& id, const std::string& name) {
-    pushByte(id);
+    insertByte(id);
     short nameSize = name.size();
     if (getEdition() == BEDROCK) {
-        pushByte(*(char*) &nameSize);
-        pushByte(*(char*) (&nameSize + 1));
+        insertByte(*(char*) &nameSize);
+        insertByte(*(char*) (&nameSize + 1));
         if(!name.empty()){
-            pushBytes((const unsigned char*) name.c_str());
+            insertBytes((const unsigned char*) name.c_str());
         }
     } else {
-        pushByte(*(char*) (&nameSize + 1));
-        pushByte(*(char*) &nameSize);
+        insertByte(*(char*) (&nameSize + 1));
+        insertByte(*(char*) &nameSize);
         if(!name.empty()){
-            pushBytes((const unsigned char*) name.c_str());
+            insertBytes((const unsigned char*) name.c_str());
         }
     }
 }
