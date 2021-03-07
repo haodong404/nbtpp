@@ -101,7 +101,6 @@ namespace nbtpp {
 
         Edition getEdition() const;
 
-
         /**
          * Whether the item is a number.
          * @param typeId Type number.

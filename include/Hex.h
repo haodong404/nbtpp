@@ -16,11 +16,8 @@ namespace nbtpp {
         Edition edition = JAVA;
 
 
-        void pushBytes(const unsigned char*);
-
-        void addIdAndNamePrefix(const unsigned char& id, const std::string& name);
-
     public:
+
         Hex();
 
         ~Hex();
@@ -29,10 +26,20 @@ namespace nbtpp {
 
         Hex(const Edition& edition, unsigned char* data);
 
-        std::ostream& operator<<(std::ostream&);
+        void addIdAndNamePrefix(const unsigned char& id, const std::string& name);
 
+        friend std::ostream& operator<<(std::ostream& out, Hex& hex) {
+            for (auto it = hex.bytesList.begin(); it != hex.bytesList.end(); it++) {
+                out << *it;
+            }
+            return out;
+        };
 
-        const char* toString();
+        void pushBytes(const unsigned char*);
+
+        void pushByte(const unsigned char&);
+
+        std::string toString();
 
         void pushSpecific(const unsigned char& id, const std::string& name, const unsigned char*);
 

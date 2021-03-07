@@ -275,18 +275,26 @@ int nbtpp::NBT::count() {
 nbtpp::Hex nbtpp::NBT::toHex() {
     Hex hex(getEdition());
     auto internalCompoundIt = getRootCompound()->internalCompound.begin();
+    hex.addIdAndNamePrefix(COMPOUND, getRootCompound()->getName());
     toHex(hex, getRootCompound(), internalCompoundIt);
+    hex.pushByte(END);
     return hex;
 }
 
-void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
-    for (const auto& i : compound->itemMap) {
+ void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
+    if (it != compound->internalCompound.end()) {
+        auto i = it->second->internalCompound.begin();
+        std::string temp = it->first; // There must be a string copy here, or an error will occur.
+        std::cout << temp << std::endl;
+        hex.addIdAndNamePrefix(COMPOUND, temp);
+        toHex(hex, it->second, i);
+        hex.pushByte(END);
+        it++;
+    }
+
+    for (auto& i : compound->itemMap) {
         hex.pushById(i.second.typeId, i.first, i.second.ptr);
     }
 
-    if (it != compound->internalCompound.end()) {
-        auto i = it->second->internalCompound.begin();
-        toHex(hex, it->second, i);
-        it++;
-    }
+
 }
