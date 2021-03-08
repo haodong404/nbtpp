@@ -36,9 +36,9 @@ namespace nbtpp {
          * Parsing the payload.
          * @param payloadLength it's always from the function 'parsePayloadLengthPrefix(const int& lengthOf Prefix)'
          * @param isNumber Whether the tag is a number.
-         * @return A smart pointer of payload bytes array.
+         * @return A smart pointer of payload ptr array.
          */
-        std::unique_ptr<char*> parsePayload(int& payloadLength, bool isNumber);
+        std::unique_ptr<unsigned char*> parsePayload(int& payloadLength, bool isNumber);
 
         /**
          * Delete internal Compounds.

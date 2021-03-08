@@ -29,7 +29,7 @@ nbtpp::NBT::~NBT() {
 
 void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it) {
     for (auto i = compound.itemMap.begin(); i != compound.itemMap.end(); i++) {
-        free(i->second.ptr);
+        free(i->second.payload.ptr);
     }
 
     if (it != compound.internalCompound.end()) {
@@ -81,7 +81,7 @@ char* nbtpp::NBT::readTagStandard(unsigned char& typeId, const bool& isInList) {
 
     auto payload = parsePayload(*payloadLength, isNumber(typeId));
     if (!isInList) {
-        compound->addItem(*name, typeId, *(unsigned int*) payloadLength.get(), *payload);
+        compound->addItem(*name, typeId, {*payload, *payloadLength});
     } else {
         char* result = (char*) std::malloc(*payloadLength);
         for (int i = 0; i < *payloadLength; i++) {
@@ -98,7 +98,6 @@ void nbtpp::NBT::readTagList(bool isRoot) {
 
     auto tagName = parseTagName();
     unsigned char tagId = in->get();
-    auto tagSize = getTagSizeById(tagId);
 
     int payloadLength = *parsePayloadLengthPrefix(0x09);
 
@@ -110,11 +109,13 @@ void nbtpp::NBT::readTagList(bool isRoot) {
         if (tagId == COMPOUND) {
             isRoot = false; // Set the "isRoot" to false to created new compound pointer.
             unsigned int length = payloadLength;
-            items->emplace_back(getEdition(), tagId, (unsigned char*) readTagCompound(true), length);
+            nbtpp::Compound::Content content(getEdition(), tagId, {(unsigned char*) readTagCompound(true), length});
+            items->emplace_back(content);
         } else {
             unsigned char* payload = (unsigned char*) (readTagStandard(tagId, true));
             unsigned int length = sizeof(payload);
-            items->emplace_back(getEdition(), tagId, payload, length);
+            nbtpp::Compound::Content content(getEdition(), tagId, {payload, length});
+            items->emplace_back(content);
         }
     }
 
@@ -126,7 +127,7 @@ void nbtpp::NBT::readTagList(bool isRoot) {
         Compound* compound = compoundsStack.top();
         unsigned int totalLength = sizeof(listPtr);
         compound->itemMap.insert(
-                std::make_pair(*tagName, Compound::Content(getEdition(), tagId, listPtr, totalLength)));
+                std::make_pair(*tagName, Compound::Content(getEdition(), tagId, {listPtr, totalLength})));
     }
     this->isInList = false;
     next();
@@ -181,16 +182,16 @@ std::unique_ptr<int> nbtpp::NBT::parsePayloadLengthPrefix(const unsigned char& t
             *((char*) result.get() + i) = in->get();
         }
     }
-    if (typeId == nbtpp::ByteArray::type_id ||
-        typeId == nbtpp::IntArray::type_id ||
-        typeId == nbtpp::LongArray::type_id) {
-        *result = *result * lengthOfPrefix;
+    if (typeId == BYTE_ARRAY ||
+        typeId == INT_ARRAY ||
+        typeId == LONG_ARRAY) {
+        *result = *result * *getTagSizeById(typeId);
     }
     return std::move(result);
 }
 
-std::unique_ptr<char*> nbtpp::NBT::parsePayload(int& payloadLength, bool isNumber) {
-    auto result = std::make_unique<char*>(new char[payloadLength]);
+std::unique_ptr<unsigned char*> nbtpp::NBT::parsePayload(int& payloadLength, bool isNumber) {
+    auto result = std::make_unique<unsigned char*>(new unsigned char[payloadLength]);
     if (isNumber && getEdition() == nbtpp::Edition::JAVA) {
         for (short i = payloadLength - 1; i >= 0; i--) {
             (*result)[i] = in->get();
@@ -229,9 +230,9 @@ void nbtpp::NBT::next() {
 std::unique_ptr<int> nbtpp::NBT::getTagSizeById(const unsigned char& id) {
 
     auto result = std::make_unique<int>();
-    if (id == TagID::BYTE) {
+    if (id == TagID::BYTE || id == TagID::BYTE_ARRAY) {
         *result = 1;
-    } else if (id == TagID::INT) {
+    } else if (id == TagID::INT || id == TagID::INT_ARRAY) {
         *result = 4;
     } else if (id == TagID::SHORT) {
         *result = 2;
@@ -239,7 +240,7 @@ std::unique_ptr<int> nbtpp::NBT::getTagSizeById(const unsigned char& id) {
         *result = 8;
     } else if (id == TagID::FLOAT) {
         *result = 4;
-    } else if (id == TagID::LONG) {
+    } else if (id == TagID::LONG  || id == TagID::INT_ARRAY) {
         *result = 8;
     } else if (id == TagID::END) {
         *result = 0;
@@ -281,11 +282,10 @@ nbtpp::Hex nbtpp::NBT::toHex() {
     return hex;
 }
 
- void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
+void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
     if (it != compound->internalCompound.end()) {
         auto i = it->second->internalCompound.begin();
         std::string temp = it->first; // There must be a string copy here, or an error will occur.
-        std::cout << temp << std::endl;
         hex.addIdAndNamePrefix(COMPOUND, temp);
         toHex(hex, it->second, i);
         hex.insertByte(END);
@@ -293,8 +293,6 @@ nbtpp::Hex nbtpp::NBT::toHex() {
     }
 
     for (auto& i : compound->itemMap) {
-        hex.pushById(i.second.typeId, i.first, i.second.ptr);
+        hex.pushById(i.second.typeId, i.first,std::move(i.second.payload));
     }
-
-
 }

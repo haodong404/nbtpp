@@ -91,11 +91,10 @@ namespace nbtpp {
          */
         struct Content {
             unsigned char typeId;
-            unsigned char* ptr; // The first byte pointer of payload
-            unsigned int length; // The length of total data;
+            Payload payload;
             Edition edition;
 
-            Content(const Edition& edition, const unsigned char& typeId, unsigned char* ptr, unsigned int& length);
+            Content(const Edition& edition, const unsigned char& typeId, const Payload& payload);
 
             /**
              * A copy constructor.
@@ -121,7 +120,7 @@ namespace nbtpp {
          * @param payload The payload.
          * @return the target data's pointer.
          */
-        unsigned char* addItem(std::string& name, const char& typeId, unsigned int& length, char* payload);
+        unsigned char* addItem(std::string& name, const char& typeId, const Payload& payload);
 
 
         /**
@@ -160,7 +159,7 @@ namespace nbtpp {
          */
         template<typename Tag>
         List<Tag> findListByName(const char* name) {
-            List<Content> temp = *(List<Content>*) itemMap.find(name)->second.ptr;
+            List<Content> temp = *(List<Content>*) itemMap.find(name)->second.payload.ptr;
 
             List<Tag> result;
             for (int i = 0; i < temp.size(); i++) {

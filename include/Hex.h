@@ -6,6 +6,7 @@
 #include "Edition.h"
 #include "TagID.h"
 #include <list>
+#include "payload.h"
 
 #pragma once
 
@@ -24,9 +25,9 @@ namespace nbtpp {
         Hex(const Edition& edition);
 
         /**
-         * Constructor that will insert default bytes.
+         * Constructor that will insert default ptr.
          * @param edition The edition of the file.
-         * @param data The bytes you want to insert.
+         * @param data The ptr you want to insert.
          */
         Hex(const Edition& edition, unsigned char* data);
 
@@ -51,46 +52,46 @@ namespace nbtpp {
         };
 
         /**
-         * Insert bytes to the bytes list.
+         * Insert ptr to the ptr list.
          * @param bytes
          */
-        void insertBytes(const unsigned char* bytes);
+        void insertBytes(Payload&& payload);
 
         /**
-         * Insert a byte to the bytes list.
+         * Insert a byte to the ptr list.
          * @param byte
          */
         void insertByte(const unsigned char& byte);
 
         /**
-         * Get the bytes as hex string.
+         * Get the ptr as hex string.
          * @return
          */
         std::string toString();
 
         /**
-         * Push the specific tag to the bytes list.
+         * Push the specific tag to the ptr list.
          * @param id
          * @param name
          * @param payload
          */
-        void pushSpecific(const unsigned char& id, const std::string& name, const unsigned char* payload);
+        void pushSpecific(const unsigned char& id, const std::string& name, Payload&& payload);
 
         /**
-         * Push the short nonespecific tag to the bytes list.
+         * Push the short nonespecific tag to the ptr list.
          * @param id
          * @param name
          * @param payload
          */
-        void pushShortNonspecific(const unsigned char& id, const std::string& name, const unsigned char* payload);
+        void pushShortNonspecific(const unsigned char& id, const std::string& name, Payload&& payload);
 
         /**
-         * Push the int nonspecific tag to the bytes list.
+         * Push the int nonspecific tag to the ptr list.
          * @param id
          * @param name
          * @param payload
          */
-        void pushIntNonspecific(const unsigned char& id, const std::string& name, const unsigned char* payload);
+        void pushIntNonspecific(const unsigned char& id, const std::string& name, Payload&& payload);
 
         /**
          * Push a tag by id.
@@ -98,7 +99,7 @@ namespace nbtpp {
          * @param name
          * @param paylaod
          */
-        void pushById(const unsigned char& id, const std::string& name, const unsigned char* paylaod);
+        void pushById(const unsigned char& id, const std::string& name, Payload&& payload);
 
         Edition getEdition() const;
 
