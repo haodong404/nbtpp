@@ -40,7 +40,6 @@ void nbtpp::Hex::insertBytes(nbtpp::Payload&& payload) {
 
 void nbtpp::Hex::insertIntPayloadPrefix(nbtpp::Payload&& payload) {
     int payloadSize = payload.size;
-
     if (getEdition() == BEDROCK) {
         for (int i = 0; i < 4; ++i) {
             insertByte(*((char*) &payloadSize + i));
@@ -74,7 +73,6 @@ void nbtpp::Hex::pushSpecific(const unsigned char& id, const std::string& name, 
 void nbtpp::Hex::pushShortNonspecific(const unsigned char& id, const std::string& name, Payload&& payload) {
     addIdAndNamePrefix(id, name);
     auto payloadSize = (unsigned short) payload.size;
-    std::cout << name << " Payload size : " << payloadSize << std::endl;
     if (getEdition() == JAVA) {
         insertByte(*(((char*) &payloadSize) + 1));
         insertByte(*((char*) &payloadSize));
@@ -122,10 +120,6 @@ void nbtpp::Hex::addIdAndNamePrefix(const unsigned char& id, const std::string& 
     }
 }
 
-void nbtpp::Hex::pushList(const std::string& name, nbtpp::Payload&& payload) {
-    addIdAndNamePrefix(LIST, name);
-}
-
 void nbtpp::Hex::pushById(const unsigned char& id, const std::string& name, Payload&& payload) {
     if (id == END || id == BYTE || id == SHORT || id == INT || id == LONG || id == FLOAT || id == DOUBLE) {
         pushSpecific(id, name, std::move(payload));
@@ -133,8 +127,6 @@ void nbtpp::Hex::pushById(const unsigned char& id, const std::string& name, Payl
         pushIntNonspecific(id, name, std::move(payload));
     } else if (id == STRING) {
         pushShortNonspecific(id, name, std::move(payload));
-    } else if (id == LIST) {
-        pushList(name, std::move(payload));
     }
 }
 

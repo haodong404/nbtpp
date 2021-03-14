@@ -211,8 +211,6 @@ void nbtpp::NBT::next() {
         return;
     }
 
-    std::cout << "ID : " << (unsigned) nextId << std::endl;
-
     if (nextId == TagID::END) {
         compoundsStack.pop();
         if (isInList) {

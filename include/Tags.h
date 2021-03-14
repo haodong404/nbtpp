@@ -24,8 +24,6 @@ namespace nbtpp {
     public:
         unsigned char* raw;
 
-        virtual Hex toHex();
-
         inline size_t getLength() const;
 
         /**
@@ -187,7 +185,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
 
@@ -198,7 +195,6 @@ namespace nbtpp {
         const static unsigned char type_id = END;
         const static unsigned char payload_size = 0;
 
-        Hex toHex() override;
     };
 
     struct Byte : public BaseTag {
@@ -222,7 +218,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct Short : public BaseTag {
@@ -241,7 +236,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct Int : public BaseTag {
@@ -262,7 +256,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct Long : public BaseTag {
@@ -283,7 +276,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct Float : public BaseTag {
@@ -304,7 +296,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct Double : public BaseTag {
@@ -325,7 +316,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
     struct ByteArray : public NonspecificIntTag {
@@ -354,7 +344,6 @@ namespace nbtpp {
 
         unsigned char& operator[](const unsigned int& position);
 
-        Hex toHex() override;
     };
 
 
@@ -379,7 +368,6 @@ namespace nbtpp {
 
         char& operator[](const unsigned int& position);
 
-        Hex toHex() override;
     };
 
     struct IntArray : public NonspecificIntTag {
@@ -408,7 +396,6 @@ namespace nbtpp {
 
         int& operator[](const unsigned int& position);
 
-        Hex toHex() override;
     };
 
     struct LongArray : public NonspecificIntTag {
@@ -439,7 +426,6 @@ namespace nbtpp {
 
         size_t size();
 
-        Hex toHex() override;
     };
 
 }

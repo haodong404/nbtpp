@@ -30,6 +30,6 @@ namespace nbtpp {
 
         const nbtpp::NBT* getNbt() const;
 
-        Hex toHex() override;
+        Hex toHex();
     };
 }

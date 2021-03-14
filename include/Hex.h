@@ -108,8 +108,6 @@ namespace nbtpp {
 
         void setEdition(Edition edition);
 
-        void pushList(const std::string& basicString, Payload&& payload);
-
         void insertIntPayloadPrefix(Payload&& payload);
     };
 }
