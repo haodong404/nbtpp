@@ -43,9 +43,8 @@ namespace nbtpp {
         /**
          * Delete internal Compounds.
          * @param compound It is in the last layer.
-         * @param it The iterator of compound.
          */
-        void deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it);
+        void deleteInternalCompounds(const Compound& compound);
 
         /**
          * Reading the compound tag.
@@ -74,12 +73,11 @@ namespace nbtpp {
         void next();
 
         /**
-         * Convert the data in the root compound into a class "Hex". And this function is for recursion.
+         * Convert the data in the root compound into a class "Hex"
          * @param hex The reference of a Hex instance.
          * @param compound
-         * @param it
          */
-        void toHex(Hex& hex, Compound* compound, std::map<std::string, Compound*>::iterator& it);
+        void toHex(Hex& hex, Compound* compound);
 
     public:
 

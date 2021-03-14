@@ -23,20 +23,17 @@ nbtpp::NBT::NBT(std::istream* m_in, const nbtpp::Edition& edi) : in(m_in), editi
 
 nbtpp::NBT::~NBT() {
     // Releasing the memory
-    auto internalCompoundIt = getRootCompound()->internalCompound.begin();
-    deleteInternalCompounds(*getRootCompound(), internalCompoundIt);
+    deleteInternalCompounds(*getRootCompound());
 }
 
-void nbtpp::NBT::deleteInternalCompounds(const Compound& compound, std::map<std::string, Compound*>::iterator& it) {
-    for (auto i = compound.itemMap.begin(); i != compound.itemMap.end(); i++) {
-        free(i->second.payload.ptr);
+void nbtpp::NBT::deleteInternalCompounds(const Compound& compound) {
+    for (const auto& i : compound.itemMap) {
+        free(i.second.payload.ptr);
     }
 
-    if (it != compound.internalCompound.end()) {
-        auto i = it->second->internalCompound.begin();
-        deleteInternalCompounds(*it->second, i);
-        delete it->second;
-        it++;
+    for (auto& it : compound.internalCompound) {
+        deleteInternalCompounds(it.second);
+        delete it.second;
     }
 }
 
@@ -55,7 +52,7 @@ nbtpp::Compound* nbtpp::NBT::readTagCompound(const bool& isInList) {
         if (!isInList) {
             compound->internalCompound.insert(std::make_pair(*name, newCompound));
         } else {
-            compoundsStack.top()->internalCompound.insert(std::make_pair(*name, newCompound));
+//            compoundsStack.top()->internalCompound.insert(std::make_pair(*name, newCompound));
         }
 
         this->isInList = isInList;
@@ -81,7 +78,7 @@ char* nbtpp::NBT::readTagStandard(unsigned char& typeId, const bool& isInList) {
 
     auto payload = parsePayload(*payloadLength, isNumber(typeId));
     if (!isInList) {
-        compound->addItem(*name, typeId, {*payload, *payloadLength});
+        compound->addItem(*name, typeId, {*payload, (unsigned long) *payloadLength});
     } else {
         char* result = (char*) std::malloc(*payloadLength);
         for (int i = 0; i < *payloadLength; i++) {
@@ -108,26 +105,28 @@ void nbtpp::NBT::readTagList(bool isRoot) {
     for (int i = 0; i < payloadLength; i++) {
         if (tagId == COMPOUND) {
             isRoot = false; // Set the "isRoot" to false to created new compound pointer.
-            unsigned int length = payloadLength;
-            nbtpp::Compound::Content content(getEdition(), tagId, {(unsigned char*) readTagCompound(true), length});
+            unsigned char* ptr = (unsigned char*) readTagCompound(true);
+            nbtpp::Compound::Content content(getEdition(), tagId, {ptr,
+                                                                   static_cast<unsigned long >(payloadLength)});
             items->emplace_back(content);
         } else {
             unsigned char* payload = (unsigned char*) (readTagStandard(tagId, true));
-            unsigned int length = sizeof(payload);
-            nbtpp::Compound::Content content(getEdition(), tagId, {payload, length});
+            nbtpp::Compound::Content content(getEdition(), tagId,
+                                             {payload, static_cast<unsigned long >(sizeof(payload))});
             items->emplace_back(content);
         }
     }
 
+    items->setContentItemTypeId(tagId);
     listPtr = (unsigned char*) items;
 
     if (isRoot) {
 
     } else {
         Compound* compound = compoundsStack.top();
-        unsigned int totalLength = sizeof(listPtr);
         compound->itemMap.insert(
-                std::make_pair(*tagName, Compound::Content(getEdition(), tagId, {listPtr, totalLength})));
+                std::make_pair(*tagName,
+                               Compound::Content(getEdition(), LIST, {listPtr, (unsigned long) payloadLength})));
     }
     this->isInList = false;
     next();
@@ -212,6 +211,8 @@ void nbtpp::NBT::next() {
         return;
     }
 
+    std::cout << "ID : " << (unsigned) nextId << std::endl;
+
     if (nextId == TagID::END) {
         compoundsStack.pop();
         if (isInList) {
@@ -240,7 +241,7 @@ std::unique_ptr<int> nbtpp::NBT::getTagSizeById(const unsigned char& id) {
         *result = 8;
     } else if (id == TagID::FLOAT) {
         *result = 4;
-    } else if (id == TagID::LONG  || id == TagID::INT_ARRAY) {
+    } else if (id == TagID::LONG || id == TagID::INT_ARRAY) {
         *result = 8;
     } else if (id == TagID::END) {
         *result = 0;
@@ -275,24 +276,43 @@ int nbtpp::NBT::count() {
 
 nbtpp::Hex nbtpp::NBT::toHex() {
     Hex hex(getEdition());
-    auto internalCompoundIt = getRootCompound()->internalCompound.begin();
     hex.addIdAndNamePrefix(COMPOUND, getRootCompound()->getName());
-    toHex(hex, getRootCompound(), internalCompoundIt);
+    toHex(hex, getRootCompound());
     hex.insertByte(END);
     return hex;
 }
 
-void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound, std::map<std::string, nbtpp::Compound*>::iterator& it) {
-    if (it != compound->internalCompound.end()) {
-        auto i = it->second->internalCompound.begin();
-        std::string temp = it->first; // There must be a string copy here, or an error will occur.
-        hex.addIdAndNamePrefix(COMPOUND, temp);
-        toHex(hex, it->second, i);
-        hex.insertByte(END);
-        it++;
-    }
+void nbtpp::NBT::toHex(Hex& hex, nbtpp::Compound* compound) {
 
     for (auto& i : compound->itemMap) {
-        hex.pushById(i.second.typeId, i.first,std::move(i.second.payload));
+        if (i.second.typeId == LIST) {
+            hex.addIdAndNamePrefix(LIST, i.first);
+            List<Compound::Content> contents = *(List<Compound::Content>*) i.second.payload.ptr;
+            hex.insertByte(contents.getContentItemTypeId());
+            hex.insertIntPayloadPrefix(std::move(i.second.payload));
+
+            for (auto& j : contents) {
+                if (j.typeId == COMPOUND) {
+                    Compound* temp = (Compound*) j.payload.ptr;
+                    toHex(hex, temp);
+                    hex.insertByte(END);
+                } else {
+                    if (getEdition() == BEDROCK || j.typeId == STRING) {
+                        hex.insertBytes(std::move(j.payload));
+                    } else {
+                        hex.insertBytesInOppositeOrder(std::move(j.payload));
+                    }
+                }
+            }
+        } else {
+            hex.pushById(i.second.typeId, i.first, std::move(i.second.payload));
+        }
+    }
+
+    for (auto& it : compound->internalCompound) {
+        std::string temp = it.first; // There must be a string copy here, or an error will occur.
+        hex.addIdAndNamePrefix(COMPOUND, temp);
+        toHex(hex, it.second);
+        hex.insertByte(END);
     }
 }

@@ -26,13 +26,13 @@ namespace nbtpp {
 
         virtual Hex toHex();
 
-        size_t getLength() const;
+        inline size_t getLength() const;
 
         /**
          * Set the length of data.
          * @param length
          */
-        void setLength(size_t length);
+        inline void setLength(size_t length);
 
         /**
          * It has no practical meaning.
@@ -70,16 +70,25 @@ namespace nbtpp {
     };
 
     template<typename T>
-    struct List : public NonspecificShortTag, public std::vector<T> {
+    struct List : public NonspecificIntTag, public std::vector<T> {
 
         const static unsigned char type_id = LIST;
 
+        unsigned char contentItemTypeId;
+
         using std::vector<T>::vector;
 
-        List(const int& size) : NonspecificShortTag() {
+        List(const int& size) : NonspecificIntTag() {
             this->reserve(size);
         }
 
+        unsigned char getContentItemTypeId() const {
+            return contentItemTypeId;
+        }
+
+        inline void setContentItemTypeId(unsigned char& contentItemTypeId) {
+            this->contentItemTypeId = contentItemTypeId;
+        }
     };
 
     struct Compound : public NonspecificShortTag {

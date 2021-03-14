@@ -63,6 +63,9 @@ namespace nbtpp {
          */
         void insertByte(const unsigned char& byte);
 
+
+        void insertBytesInOppositeOrder(Payload&& payload);
+
         /**
          * Get the ptr as hex string.
          * @return
@@ -104,5 +107,9 @@ namespace nbtpp {
         Edition getEdition() const;
 
         void setEdition(Edition edition);
+
+        void pushList(const std::string& basicString, Payload&& payload);
+
+        void insertIntPayloadPrefix(Payload&& payload);
     };
 }
