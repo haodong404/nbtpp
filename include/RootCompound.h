@@ -28,8 +28,12 @@ namespace nbtpp {
 
         virtual ~RootCompound();
 
-        const nbtpp::NBT* getNbt() const;
+        nbtpp::NBT* getNbt() const;
 
+        /**
+         * Get the class Hex from the data.
+         * @return A Hex instance.
+         */
         Hex toHex();
     };
 }

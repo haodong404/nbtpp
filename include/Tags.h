@@ -138,11 +138,17 @@ namespace nbtpp {
          * @return The result.
          */
         template<typename Tag>
-        Tag findItemByName(const char* name) {
-            Tag tag(itemMap.find(name)->second);
-            tag.setName(name);
-            return tag;
-        }
+        Tag bindItemByName(const char* name) {
+            auto it = itemMap.find(name);
+            if (it != itemMap.end()) {
+                Tag tag(it->second);
+                tag.setName(name);
+                return tag;
+            } else {
+                std::cout << "'" << name << "' not found in '" << getName() << "'" << std::endl;
+                return NULL;
+            }
+        } 
 
         /**
          * Find the compound by name, it just fits with compound tag, DO NOT transfer others.
@@ -151,7 +157,7 @@ namespace nbtpp {
          * @return The result.
          */
         template<typename Tag>
-        Tag findCompoundByName(const char* name) {
+        Tag bindCompoundByName(const char* name) {
             Tag tag(internalCompound.find(name)->second);
             tag.bind();
             tag.setName(name);
@@ -165,10 +171,11 @@ namespace nbtpp {
          * @return The result.
          */
         template<typename Tag>
-        List<Tag> findListByName(const char* name) {
+        List<Tag> bindListByName(const char* name) {
             List<Content> temp = *(List<Content>*) itemMap.find(name)->second.payload.ptr;
 
             List<Tag> result;
+            result.setName(name);
             for (int i = 0; i < temp.size(); i++) {
                 Tag tag(temp[i]);
                 if (temp[0].typeId == COMPOUND) {
@@ -189,7 +196,7 @@ namespace nbtpp {
 
 
     /**
-     * The Tag_End class
+     * The Tag_End struct.
      */
     struct End : public BaseTag {
         const static unsigned char type_id = END;

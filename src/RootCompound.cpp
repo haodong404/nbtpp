@@ -6,7 +6,7 @@
 #include "RootCompound.h"
 
 
-const nbtpp::NBT* nbtpp::RootCompound::getNbt() const {
+nbtpp::NBT* nbtpp::RootCompound::getNbt() const {
     return nbt;
 }
 
@@ -34,7 +34,5 @@ nbtpp::RootCompound::RootCompound() : Compound() {
 }
 
 nbtpp::Hex nbtpp::RootCompound::toHex() {
-    Hex hex(getEdition());
-
-    return hex;
+    return getNbt()->toHex();
 }
