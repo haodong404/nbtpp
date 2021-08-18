@@ -12,6 +12,7 @@ install:
   - cd cmake-3.21.1-linux-x86_64/bin
   - sudo ln -s cmake /usr/bin/cmake
 before_script:
+  - cd ../../
   - mkdir build && cd build
 script:
   - cmake ..
