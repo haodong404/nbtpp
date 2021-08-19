@@ -30,8 +30,5 @@ script:
   - cmake ..
   - make
 
-jobs:
-  include:
-    - stage: test
-      script:
-        - ./build/test/nbtpp_test
+after_script:
+  - ./build/test/nbtpp_test
