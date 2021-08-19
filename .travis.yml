@@ -29,3 +29,9 @@ before_script:
 script:
   - cmake ..
   - make
+
+jobs:
+  include:
+    - stage: test
+      script:
+        - ./build/test/nbtpp_test
