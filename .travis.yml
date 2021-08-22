@@ -31,4 +31,4 @@ script:
   - make
 
 after_script:
-  - ./build/test/nbtpp_test
+  - ./test/nbtpp_test
